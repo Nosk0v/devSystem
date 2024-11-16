@@ -1,35 +1,56 @@
-// cmd/main.go
 package main
 
 import (
+	"context"
 	"devSystem/config"
+	"devSystem/internal/handler"
 	"devSystem/internal/repository"
-	"fmt"
+	"devSystem/internal/service"
+	"devSystem/internal/usecase"
+	"devSystem/server"
+	"github.com/execaus/exloggo"
+	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/jmoiron/sqlx"
-	"log"
 )
 
 func main() {
-	// Инициализация базы данных
-	db := config.InitDB()
-	defer func(db *sqlx.DB) {
-		err := db.Close()
-		if err != nil {
-		}
-	}(db)
 
-	// Создание общего репозитория
+	config, err := config.Config("../config/config.json")
+	if err != nil {
+		exloggo.Fatalf("failed to load configuration: %v", nil, err)
+	}
+
+	db, err := setupDatabase(config)
+	if err != nil {
+		exloggo.Fatalf("failed to connect to database: %v", nil, err)
+	}
+	defer db.Close()
+
 	repo := repository.NewRepository(db)
+	service := service.NewService(repo)
+	usecase := usecase.NewUsecase(service)
+	handler := handler.NewHandler(usecase)
 
-	materials, err := repo.GetAllMaterials()
-	if err != nil {
-		log.Fatalf("Ошибка получения материалов: %v", err)
-	}
-	fmt.Println("Материалы:", materials)
+	srv := server.Server{}
+	runServer(&srv, handler, "8080")
+	srv.Shutdown(db, context.Background())
+}
 
-	competencies, err := repo.GetAllCompetencies()
+func setupDatabase(config *repository.Config) (*sqlx.DB, error) {
+	db, err := repository.NewPostgresConnection(config)
 	if err != nil {
-		log.Fatalf("Ошибка получения компетенций: %v", err)
+		return nil, err
 	}
-	fmt.Println("Компетенции:", competencies)
+	exloggo.Info("database connection established successfully")
+	return db, nil
+}
+
+func runServer(srv *server.Server, handler *handler.Handler, port string) {
+	ginEngine := handler.InitRoutes()
+
+	if err := srv.Run(port, ginEngine); err != nil {
+		if err.Error() != "http: Server closed" {
+			exloggo.Fatalf("error occurred while running http server: %s", nil, err.Error())
+		}
+	}
 }

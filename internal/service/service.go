@@ -5,45 +5,29 @@ import (
 	"devSystem/models"
 )
 
+type Material interface {
+	CreateMaterial(material models.Material) error
+	GetMaterialByID(id int) (models.Material, error)
+	UpdateMaterial(material models.Material) error
+	DeleteMaterial(id int) error
+	GetAllMaterials() ([]models.Material, error)
+}
+
+type Competency interface {
+	CreateCompetency(comp models.Competency) error
+	GetAllCompetencies() ([]models.Competency, error)
+	UpdateCompetency(comp models.Competency) error
+	DeleteCompetency(id int) error
+}
+
 type Service struct {
-	repo *repository.Repository
+	Material
+	Competency
 }
 
 func NewService(repo *repository.Repository) *Service {
-	return &Service{repo: repo}
-}
-
-func (s *Service) CreateMaterial(material models.Material) error {
-	return s.repo.CreateMaterial(material)
-}
-
-func (s *Service) GetMaterialByID(id int) (models.Material, error) {
-	return s.repo.GetMaterialByID(id)
-}
-
-func (s *Service) UpdateMaterial(material models.Material) error {
-	return s.repo.UpdateMaterial(material)
-}
-
-func (s *Service) DeleteMaterial(id int) error {
-	return s.repo.DeleteMaterial(id)
-}
-func (s *Service) GetAllMaterials() ([]models.Material, error) {
-	return s.repo.GetAllMaterials()
-}
-
-func (s *Service) GetAllCompetencies() ([]models.Competency, error) {
-	return s.repo.GetAllCompetencies()
-}
-
-func (s *Service) CreateCompetency(comp models.Competency) error {
-	return s.repo.CreateCompetency(comp)
-}
-
-func (s *Service) UpdateCompetency(comp models.Competency) error {
-	return s.repo.UpdateCompetency(comp)
-}
-
-func (s *Service) DeleteCompetency(id int) error {
-	return s.repo.DeleteCompetency(id)
+	return &Service{
+		Material:   NewMaterialService(repo),
+		Competency: NewCompetencyService(repo),
+	}
 }
