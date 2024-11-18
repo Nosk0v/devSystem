@@ -1,4 +1,18 @@
- package main
+// @title devSystem API  Documentation
+// @version 1.0
+// @description This is a sample server for an employee development system called "Competentum"
+// @termsOfService http://swagger.io/terms/
+
+// @contact.name API Support
+// @contact.email alexandernoskov.dev@gmail.com
+
+// @license.name MIT
+// @license.url https://opensource.org/licenses/MIT
+
+// @host localhost:8080
+// @BasePath /
+
+package main
 
 import (
 	"context"
