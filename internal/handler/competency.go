@@ -9,14 +9,9 @@ import (
 	"time"
 )
 
-// ErrorResponse описывает ошибку в ответах API
-type ErrorResponse struct {
-	Error string `json:"error"`
-}
-
 // GetAllCompetencies godoc
-// @Summary Get all competencies
-// @Description Get a list of all competencies
+// @Summary Получить все компетенции
+// @Description Получение списка с компетенциями.
 // @Tags competencies
 // @Accept json
 // @Produce json
@@ -34,12 +29,12 @@ func (h *Handler) getAllCompetencies(c *gin.Context) {
 }
 
 // CreateCompetency godoc
-// @Summary Create a new competency
-// @Description Create a new competency with the input payload
+// @Summary Создать компетенцию
+// @Description Создает новую компетенцию по входным данным.
 // @Tags competencies
 // @Accept json
 // @Produce json
-// @Param competency body models.Competency true "Competency to create"
+// @Param competency body models.Competency true "Входные данные"
 // @Success 201 {object} models.Competency
 // @Failure 400 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse
@@ -65,13 +60,13 @@ func (h *Handler) createCompetency(c *gin.Context) {
 }
 
 // UpdateCompetency godoc
-// @Summary Update an existing competency
-// @Description Update competency details by its ID
+// @Summary Обновить компетенцию
+// @Description Обновление сведений о компетенции по её ID.
 // @Tags competencies
 // @Accept json
 // @Produce json
-// @Param id path int true "Competency ID"
-// @Param competency body models.Competency true "Competency to update"
+// @Param id path int true "ID компетенции"
+// @Param competency body models.Competency true "Входные данные"
 // @Success 200 {object} models.Competency
 // @Failure 400 {object} ErrorResponse
 // @Failure 404 {object} ErrorResponse
@@ -101,12 +96,12 @@ func (h *Handler) updateCompetency(c *gin.Context) {
 }
 
 // DeleteCompetency godoc
-// @Summary Delete a competency
-// @Description Delete a competency by its ID
+// @Summary Удалить компетенцию
+// @Description Удаление компетенции по её ID.
 // @Tags competencies
 // @Accept json
 // @Produce json
-// @Param id path int true "Competency ID"
+// @Param id path int true "ID компетенции"
 // @Success 204 {object} nil
 // @Failure 404 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse

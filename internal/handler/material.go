@@ -9,12 +9,12 @@ import (
 )
 
 // GetMaterial godoc
-// @Summary Get a material by ID
-// @Description Get material details by its ID
+// @Summary Получить материал по ID
+// @Description Получение сведений о материале по его ID.
 // @Tags materials
 // @Accept json
 // @Produce json
-// @Param id path int true "Material ID"
+// @Param id path int true "ID материала"
 // @Success 200 {object} models.Material
 // @Failure 404 {object} ErrorResponse
 // @Router /materials/{id} [get]
@@ -40,8 +40,8 @@ func (h *Handler) getMaterial(c *gin.Context) {
 }
 
 // GetAllMaterials godoc
-// @Summary Get all materials
-// @Description Get a list of all materials
+// @Summary Получить все материалы
+// @Description Получение списка со всеми материалами.
 // @Tags materials
 // @Accept json
 // @Produce json
@@ -59,12 +59,12 @@ func (h *Handler) getAllMaterials(c *gin.Context) {
 }
 
 // CreateMaterial godoc
-// @Summary Create a new material
-// @Description Create a new material with the input payload
+// @Summary Создать материал
+// @Description Создание нового материала по входным данным.
 // @Tags materials
 // @Accept json
 // @Produce json
-// @Param material body models.Material true "Material to create"
+// @Param material body models.Material true "Входные данные"
 // @Success 201 {object} models.Material
 // @Failure 400 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse
@@ -87,13 +87,13 @@ func (h *Handler) createMaterial(c *gin.Context) {
 }
 
 // UpdateMaterial godoc
-// @Summary Update an existing material
-// @Description Update material details by its ID
+// @Summary Обновить материал
+// @Description Обновление материала по его ID.
 // @Tags materials
 // @Accept json
 // @Produce json
-// @Param id path int true "Material ID"
-// @Param material body models.Material true "Material to update"
+// @Param id path int true "ID материала"
+// @Param material body models.Material true "Входные данные"
 // @Success 200 {object} models.Material
 // @Failure 400 {object} ErrorResponse
 // @Failure 404 {object} ErrorResponse
@@ -123,12 +123,12 @@ func (h *Handler) updateMaterial(c *gin.Context) {
 }
 
 // DeleteMaterial godoc
-// @Summary Delete a material
-// @Description Delete a material by its ID
+// @Summary Удалить материал
+// @Description Удаление материала по его ID.
 // @Tags materials
 // @Accept json
 // @Produce json
-// @Param id path int true "Material ID"
+// @Param id path int true "ID материала"
 // @Success 204 {object} nil
 // @Failure 404 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse

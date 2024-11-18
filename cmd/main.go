@@ -1,6 +1,6 @@
-// @title devSystem API  Documentation
+// @title devSystem API Документация
 // @version 1.0
-// @description This is a sample server for an employee development system called "Competentum"
+// @description Это пример API сервера для системы развития сотрудников под названием «Компетентум».
 // @termsOfService http://swagger.io/terms/
 
 // @contact.name API Support

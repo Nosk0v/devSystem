@@ -35,3 +35,7 @@ func (h *Handler) InitRoutes() *gin.Engine {
 
 	return router
 }
+
+type ErrorResponse struct {
+	Error string `json:"error"`
+}
