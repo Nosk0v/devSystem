@@ -33,7 +33,7 @@ import (
 func main() {
 	configPath := os.Getenv("CONFIG_PATH")
 	if configPath == "" {
-		exloggo.Fatalf("CONFIG_PATH not set in environment variables")
+		configPath = "../config/config.json" // Умолчательный путь
 	}
 
 	config, err := config.Config(configPath)
@@ -47,8 +47,13 @@ func main() {
 	}
 	defer db.Close()
 
-	if err := applyMigrations(db); err != nil {
-		exloggo.Fatalf("failed to apply migrations: %v", err)
+	skipMigrations := os.Getenv("SKIP_MIGRATIONS")
+	if skipMigrations == "true" {
+		exloggo.Info("Skipping database migrations as per configuration")
+	} else {
+		if err := applyMigrations(db); err != nil {
+			exloggo.Fatalf("failed to apply migrations: %v", err)
+		}
 	}
 
 	repo := repository.NewRepository(db)
@@ -75,11 +80,10 @@ func setupDatabase(config *repository.Config) (*sqlx.DB, error) {
 }
 
 func applyMigrations(db *sqlx.DB) error {
-	migrationsDir := "./db/migrations"
+	migrationsDir := "./db/migrations" // менять в случае необходимости
 	if err := goose.SetDialect("postgres"); err != nil {
 		return fmt.Errorf("failed to set dialect for migrations: %w", err)
 	}
-
 	if err := goose.Up(db.DB, migrationsDir); err != nil {
 		return fmt.Errorf("failed to apply migrations: %w", err)
 	}
