@@ -10,6 +10,11 @@ CREATE TABLE IF NOT EXISTS MaterialType
     type_id SERIAL PRIMARY KEY,
     type    VARCHAR(50) NOT NULL
 );
+-- Вставка по-умолчанию в таблицу MaterialType
+INSERT INTO MaterialType (type) VALUES
+    ('Курс'),
+    ('Книга'),
+    ('Видео');
 
 
 CREATE TABLE IF NOT EXISTS Competency
@@ -42,3 +47,11 @@ CREATE TABLE IF NOT EXISTS "User"
 (
     username VARCHAR(255) NOT NULL PRIMARY KEY
 );
+
+-- +goose Down
+DROP TABLE IF EXISTS "User";
+DROP TABLE IF EXISTS MaterialCompetency;
+DROP TABLE IF EXISTS Material;
+DROP TABLE IF EXISTS Competency;
+DROP TABLE IF EXISTS MaterialType;
+DROP TABLE IF EXISTS goose_db_version;

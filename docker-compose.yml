@@ -19,7 +19,7 @@ services:
     command: ["/bin/sh", "-c", "until nc -z db 5432; do echo 'Waiting for DB...'; sleep 1; done; go run ./cmd/main.go"]
 
   db:
-    image: postgres:15-alpine
+    image: postgres:latest
     container_name: dev_system_db
     environment:
       POSTGRES_USER: postgres
