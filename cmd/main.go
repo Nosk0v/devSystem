@@ -33,7 +33,7 @@ import (
 func main() {
 	configPath := os.Getenv("CONFIG_PATH")
 	if configPath == "" {
-		configPath = "../config/config.json" // Умолчательный путь
+		configPath = "../config/config.json"
 	}
 
 	config, err := config.Config(configPath)
