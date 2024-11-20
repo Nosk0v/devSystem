@@ -2,6 +2,7 @@ package repository
 
 import (
 	"fmt"
+	_ "github.com/jackc/pgx/v5/stdlib" // Импортируем драйвер для PostgreSQL
 	"github.com/jmoiron/sqlx"
 )
 
@@ -15,7 +16,15 @@ type Config struct {
 }
 
 func NewPostgresConnection(config *Config) (*sqlx.DB, error) {
-	return sqlx.Connect(
-		"pgx", fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
-			config.Host, config.Port, config.Username, config.Password, config.DBName, config.SSLMode))
+	// Формируем строку подключения
+	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
+		config.Host, config.Port, config.Username, config.Password, config.DBName, config.SSLMode)
+
+	// Подключаемся к базе данных
+	db, err := sqlx.Connect("pgx", dsn)
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect to the database: %w", err)
+	}
+
+	return db, nil
 }

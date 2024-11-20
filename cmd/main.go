@@ -22,23 +22,34 @@ import (
 	"devSystem/internal/service"
 	"devSystem/internal/usecase"
 	"devSystem/server"
+	"fmt"
 	"github.com/execaus/exloggo"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/jmoiron/sqlx"
+	"github.com/pressly/goose/v3"
+	"os"
 )
 
 func main() {
+	configPath := os.Getenv("CONFIG_PATH")
+	if configPath == "" {
+		exloggo.Fatalf("CONFIG_PATH not set in environment variables")
+	}
 
-	config, err := config.Config("../config/config.json")
+	config, err := config.Config(configPath)
 	if err != nil {
-		exloggo.Fatalf("failed to load configuration: %v", nil, err)
+		exloggo.Fatalf("failed to load configuration: %v", err)
 	}
 
 	db, err := setupDatabase(config)
 	if err != nil {
-		exloggo.Fatalf("failed to connect to database: %v", nil, err)
+		exloggo.Fatalf("failed to connect to database: %v", err)
 	}
 	defer db.Close()
+
+	if err := applyMigrations(db); err != nil {
+		exloggo.Fatalf("failed to apply migrations: %v", err)
+	}
 
 	repo := repository.NewRepository(db)
 	service := service.NewService(repo)
@@ -47,16 +58,34 @@ func main() {
 
 	srv := server.Server{}
 	runServer(&srv, handler, "8080")
+
 	srv.Shutdown(db, context.Background())
 }
 
 func setupDatabase(config *repository.Config) (*sqlx.DB, error) {
-	db, err := repository.NewPostgresConnection(config)
+	dbURL := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
+		config.Host, config.Port, config.Username, config.Password, config.DBName, config.SSLMode)
+
+	db, err := sqlx.Connect("pgx", dbURL)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to connect to database: %w", err)
 	}
 	exloggo.Info("database connection established successfully")
 	return db, nil
+}
+
+func applyMigrations(db *sqlx.DB) error {
+	migrationsDir := "./db/migrations"
+	if err := goose.SetDialect("postgres"); err != nil {
+		return fmt.Errorf("failed to set dialect for migrations: %w", err)
+	}
+
+	if err := goose.Up(db.DB, migrationsDir); err != nil {
+		return fmt.Errorf("failed to apply migrations: %w", err)
+	}
+
+	exloggo.Info("migrations applied successfully")
+	return nil
 }
 
 func runServer(srv *server.Server, handler *handler.Handler, port string) {
@@ -64,7 +93,7 @@ func runServer(srv *server.Server, handler *handler.Handler, port string) {
 
 	if err := srv.Run(port, ginEngine); err != nil {
 		if err.Error() != "http: Server closed" {
-			exloggo.Fatalf("error occurred while running http server: %s", nil, err.Error())
+			exloggo.Fatalf("error occurred while running http server: %s", err.Error())
 		}
 	}
 }
