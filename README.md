@@ -33,7 +33,7 @@
 
 1. **Клонирование репозитория:**
    ```bash
-   git clone https://github.com/<ваш_репозиторий>/devSystem.git
+   git clone https://github.com/Nosk0v/devSystem.git
    cd devSystem
 2. **Настройка базы данных:**
    
@@ -79,7 +79,7 @@
 
 1. **Клонирование репозитория:**
    ```bash
-   git clone https://github.com/<ваш_репозиторий>/devSystem.git
+   git clone https://github.com/Nosk0v/devSystem.git
    cd devSystem
 2. **Сборка и запуск контейнеров:**
    
