@@ -12,9 +12,7 @@ services:
       - db
     networks:
       - dev_system_network
-    volumes:
-      - .:/app
-    command: ["/bin/sh", "-c", "until nc -z db 5432; do echo 'Waiting for DB...'; sleep 1; done; go run ./cmd/main.go"]
+    command: ["/bin/sh", "-c", "until nc -z db 5432; do echo 'Waiting for DB...'; sleep 1; done; ./main"]
 
   db:
     image: postgres:latest
