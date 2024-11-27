@@ -6,7 +6,8 @@ import (
 )
 
 type Material interface {
-	CreateMaterial(material models.Material) error
+	CreateMaterial(material models.Material) (int, error)
+	LinkMaterialWithCompetencies(materialID int, competencyIDs []int) error
 	GetMaterialByID(id int) (models.Material, error)
 	UpdateMaterial(material models.Material) error
 	DeleteMaterial(id int) error

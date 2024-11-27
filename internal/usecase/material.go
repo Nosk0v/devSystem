@@ -13,11 +13,15 @@ func (u *Usecase) CreateMaterial(material models.Material) error {
 		return errors.New("material name is required")
 	}
 	log.Printf("Material to be passed to service: %+v\n", material)
-	if err := u.services.CreateMaterial(material); err != nil {
+
+	// Получаем ID материала и ошибку от сервиса
+	materialID, err := u.services.CreateMaterial(material)
+	if err != nil {
 		log.Println("Error creating material:", err)
 		return err
 	}
-	log.Println("Successfully created material:", material.Title)
+
+	log.Println("Successfully created material with ID:", materialID)
 	return nil
 }
 

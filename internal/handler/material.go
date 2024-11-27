@@ -3,6 +3,7 @@ package handler
 import (
 	"devSystem/models"
 	"github.com/gin-gonic/gin"
+	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -75,9 +76,13 @@ func (h *Handler) createMaterial(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, ErrorResponse{Error: "Invalid input"})
 		return
 	}
+
 	if input.CreateDate.IsZero() {
 		input.CreateDate = time.Now()
 	}
+
+	log.Printf("Input: %+v\n", input)
+
 	if err := h.usecases.CreateMaterial(input); err != nil {
 		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: "Error creating material"})
 		return
