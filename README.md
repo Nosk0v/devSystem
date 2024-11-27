@@ -59,7 +59,8 @@
     }
 5. **Запуск сервера:**
    ```bash
-   SKIP_MIGRATIONS=true go run ./cmd/main.go
+   cd cmd
+   SKIP_MIGRATIONS=true go run main.go
 6. **Проверка работы:**
    
     После запуска приложение доступно на http://localhost:8080.
