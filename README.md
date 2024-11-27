@@ -57,21 +57,10 @@
     "dbname": "development_system",
     "sslmode": "disable"
     }
-4. **Настройка main.go:**
-
-   Измените путь к папке migrations
-   
-   ```go
-   migrationsDir := "./db/migrations"
-   
-   на
-   
-   migrationsDir := "../db/migrations"
-
-6. **Запуск сервера:**
+5. **Запуск сервера:**
    ```bash
    SKIP_MIGRATIONS=true go run ./cmd/main.go
-7. **Проверка работы:**
+6. **Проверка работы:**
    
     После запуска приложение доступно на http://localhost:8080.
 
