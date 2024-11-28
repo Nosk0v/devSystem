@@ -69,14 +69,14 @@ func (h *Handler) getAllMaterials(c *gin.Context) {
 
 // CreateMaterial godoc
 // @Summary Создать материал
-// @Description Создание нового материала по входным данным.
+// @Description Создание нового материала по входным данным с указанием компетенций.
 // @Tags materials
 // @Accept json
 // @Produce json
 // @Param material body models.CreateMaterialRequest true "Входные данные"
 // @Success 201 {object} models.MaterialResponse
-// @Failure 400 {object} ErrorResponse
-// @Failure 500 {object} ErrorResponse
+// @Failure 400 {object} handler.ErrorResponse
+// @Failure 500 {object} handler.ErrorResponse
 // @Router /materials [post]
 func (h *Handler) createMaterial(c *gin.Context) {
 	var input models.CreateMaterialRequest
