@@ -2,71 +2,104 @@ package usecase
 
 import (
 	"devSystem/models"
-	"errors"
+	"fmt"
 	"log"
+	"strings"
 )
 
-func (u *Usecase) CreateMaterial(material models.Material) error {
-	log.Println("Attempting to create material:", material.Title)
+func (u *Usecase) CreateMaterial(material models.Material) (int, error) {
 	if material.Title == "" {
-		log.Println("Failed to create material: title is required")
-		return errors.New("material name is required")
+		return 0, fmt.Errorf("material title is required")
 	}
-	log.Printf("Material to be passed to service: %+v\n", material)
 
-	// Получаем ID материала и ошибку от сервиса
-	materialID, err := u.services.CreateMaterial(material)
+	materialID, err := u.services.Material.CreateMaterial(material)
 	if err != nil {
-		log.Println("Error creating material:", err)
-		return err
+		return 0, fmt.Errorf("error creating material: %w", err)
+	}
+	if len(material.Competencies) > 0 {
+		err = u.services.Material.LinkMaterialWithCompetencies(materialID, material.Competencies)
+		if err != nil {
+			return 0, fmt.Errorf("error linking material with competencies: %w", err)
+		}
 	}
 
-	log.Println("Successfully created material with ID:", materialID)
-	return nil
+	return materialID, nil
 }
 
-func (u *Usecase) GetAllMaterials() ([]models.Material, error) {
-	log.Println("Fetching all materials")
-	materials, err := u.services.GetAllMaterials()
+func (u *Usecase) GetAllMaterials() ([]models.MaterialResponse, error) {
+	// Логируем запрос к данным
+	log.Printf("Fetching all materials from the service layer.")
+
+	materials, err := u.services.Material.GetAllMaterials()
 	if err != nil {
-		log.Println("Error fetching all materials:", err)
-		return nil, err
+		log.Printf("Error fetching all materials in usecase: %v", err) // Логируем ошибку
+		return nil, fmt.Errorf("error fetching all materials: %w", err)
 	}
-	log.Println("Successfully fetched all materials, count:", len(materials))
-	return materials, nil
+
+	var response []models.MaterialResponse
+	for _, material := range materials {
+		// Логируем каждое возвращаемое значение материала
+		log.Printf("Fetched material: %+v", material)
+
+		response = append(response, models.MaterialResponse{
+			MaterialID:   material.MaterialID,
+			Title:        material.Title,
+			Description:  material.Description,
+			TypeName:     material.TypeName,
+			Content:      material.Content,
+			Competencies: material.Competencies,
+			CreateDate:   material.CreateDate,
+		})
+	}
+
+	// Логируем итоговый список материалов
+	log.Printf("Total materials fetched: %d", len(response))
+
+	return response, nil
 }
 
-func (u *Usecase) GetMaterial(id int) (*models.Material, error) {
-	log.Printf("Fetching material with ID: %d\n", id)
-	material, err := u.services.GetMaterialByID(id)
-	if err != nil {
-		log.Println("Error fetching material:", err)
-		return nil, err
+func (u *Usecase) GetMaterial(id int) (*models.MaterialResponse, error) {
+	if id <= 0 {
+		log.Printf("Invalid material ID: %d", id) // Логируем некорректный ID
+		return nil, fmt.Errorf("invalid material ID: %d", id)
 	}
-	log.Printf("Successfully fetched material: %+v\n", material)
-	return &material, nil
+
+	log.Printf("Fetching material with ID: %d", id)
+
+	material, err := u.services.Material.GetMaterialByID(id)
+	if err != nil {
+		log.Printf("Error fetching material with ID %d: %v", id, err) // Логируем ошибку
+		return nil, fmt.Errorf("error fetching material with ID %d: %w", id, err)
+	}
+	log.Printf("Fetched material: %+v", material)
+
+	response := &models.MaterialResponse{
+		MaterialID:   material.MaterialID,
+		Title:        material.Title,
+		Description:  material.Description,
+		TypeName:     material.TypeName,
+		Content:      material.Content,
+		Competencies: material.Competencies,
+		CreateDate:   material.CreateDate,
+	}
+
+	return response, nil
 }
 
 func (u *Usecase) UpdateMaterial(material models.Material) error {
-	log.Printf("Attempting to update material with ID %d\n", material.MaterialID)
-	if material.Title == "" {
-		log.Println("Failed to update material: title is required")
-		return errors.New("material name is required")
+	err := u.services.Material.UpdateMaterial(material)
+	if err != nil {
+		if strings.Contains(err.Error(), "duplicate key value violates unique constraint") {
+			return nil
+		}
+		return fmt.Errorf("error updating material: %w", err)
 	}
-	if err := u.services.UpdateMaterial(material); err != nil {
-		log.Println("Error updating material:", err)
-		return err
-	}
-	log.Printf("Successfully updated material with ID %d\n", material.MaterialID)
 	return nil
 }
 
 func (u *Usecase) DeleteMaterial(id int) error {
-	log.Printf("Attempting to delete material with ID %d\n", id)
-	if err := u.services.DeleteMaterial(id); err != nil {
-		log.Println("Error deleting material:", err)
-		return err
+	if err := u.services.Material.DeleteMaterial(id); err != nil {
+		return fmt.Errorf("error deleting material: %w", err)
 	}
-	log.Printf("Successfully deleted material with ID %d\n", id)
 	return nil
 }

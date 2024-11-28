@@ -3,15 +3,14 @@ package service
 import (
 	"devSystem/internal/repository"
 	"devSystem/models"
-	"fmt"
 )
 
 type Material interface {
 	CreateMaterial(material models.Material) (int, error)
-	GetMaterialByID(id int) (models.Material, error)
+	GetMaterialByID(id int) (models.MaterialResponse, error)
 	UpdateMaterial(material models.Material) error
 	DeleteMaterial(id int) error
-	GetAllMaterials() ([]models.Material, error)
+	GetAllMaterials() ([]models.MaterialResponse, error)
 	LinkMaterialWithCompetencies(materialID int, competencyIDs []int) error
 }
 
@@ -23,21 +22,13 @@ type Competency interface {
 }
 
 type Service struct {
-	Material
-	Competency
-}
-
-func (s *Service) LinkMaterialWithCompetencies(materialID int, competencyIDs []int) error {
-	err := s.Material.LinkMaterialWithCompetencies(materialID, competencyIDs)
-	if err != nil {
-		return fmt.Errorf("error linking material with competencies: %w", err)
-	}
-	return nil
+	Material   Material
+	Competency Competency
 }
 
 func NewService(repo *repository.Repository) *Service {
 	return &Service{
-		Material:   NewMaterialService(repo),
-		Competency: NewCompetencyService(repo),
+		Material:   NewMaterialService(repo.MaterialRepository),     // Используем MaterialRepository
+		Competency: NewCompetencyService(repo.CompetencyRepository), // Используем CompetencyRepository
 	}
 }

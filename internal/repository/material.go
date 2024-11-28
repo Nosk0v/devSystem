@@ -2,11 +2,9 @@ package repository
 
 import (
 	"devSystem/models"
-	"encoding/json"
 	"fmt"
 	"github.com/jmoiron/sqlx"
 	"log"
-	"strings"
 )
 
 type MaterialRepository struct {
@@ -43,103 +41,77 @@ func (r *MaterialRepository) LinkMaterialWithCompetencies(materialID int, compet
 	return nil
 }
 
-func (r *MaterialRepository) GetAllMaterials() ([]models.Material, error) {
-	var materials []models.Material
+func (r *MaterialRepository) GetMaterialByID(id int) (models.MaterialResponse, error) {
+	var material models.MaterialResponse
 	query := `
-		SELECT 
-			m.material_id,
-			m.title,
-			m.description,
-			m.type,
-			m.content,
-			m.create_date,
-			COALESCE(array_agg(mc.competency_id)::TEXT, '{}') AS competency_ids
-		FROM material m
+		SELECT m.material_id, m.title, m.description, mt.type AS type_name, m.content, m.create_date,
+		       array_agg(c.name) AS competencies
+		FROM Material m
+		LEFT JOIN MaterialType mt ON m.type = mt.type_id
 		LEFT JOIN MaterialCompetency mc ON m.material_id = mc.material_id
-		GROUP BY m.material_id
-	`
-
-	rows, err := r.db.Query(query)
-	if err != nil {
-		return nil, fmt.Errorf("error fetching all materials: %w", err)
-	}
-	defer rows.Close()
-
-	for rows.Next() {
-		var material models.Material
-		var competencyIDs string // Временное хранение массива как строки
-
-		err := rows.Scan(
-			&material.MaterialID,
-			&material.Title,
-			&material.Description,
-			&material.Type,
-			&material.Content,
-			&material.CreateDate,
-			&competencyIDs,
-		)
-		if err != nil {
-			return nil, fmt.Errorf("error scanning row: %w", err)
-		}
-
-		// Преобразуем строку компетенций в массив []int
-		if err := parseStringToIntSlice(competencyIDs, &material.CompetencyIDs); err != nil {
-			return nil, fmt.Errorf("error parsing competency IDs: %w", err)
-		}
-
-		materials = append(materials, material)
-	}
-
-	return materials, nil
-}
-
-func (r *MaterialRepository) GetMaterialByID(id int) (models.Material, error) {
-	var material models.Material
-	var competencyIDs string // Временное хранение массива как строки
-
-	query := `
-		SELECT 
-			m.material_id,
-			m.title,
-			m.description,
-			m.type,
-			m.content,
-			m.create_date,
-			COALESCE(array_agg(mc.competency_id)::TEXT, '{}') AS competency_ids
-		FROM material m
-		LEFT JOIN MaterialCompetency mc ON m.material_id = mc.material_id
+		LEFT JOIN Competency c ON mc.competency_id = c.competency_id
 		WHERE m.material_id = $1
-		GROUP BY m.material_id
+		GROUP BY m.material_id, mt.type
 	`
-
-	err := r.db.QueryRow(query, id).Scan(
-		&material.MaterialID,
-		&material.Title,
-		&material.Description,
-		&material.Type,
-		&material.Content,
-		&material.CreateDate,
-		&competencyIDs, // Получаем компетенции в виде строки
-	)
+	err := r.db.Get(&material, query, id)
 	if err != nil {
-		return models.Material{}, fmt.Errorf("error fetching material by ID: %w", err)
+		return models.MaterialResponse{}, fmt.Errorf("error fetching material by ID: %w", err)
 	}
-
-	// Преобразуем строку компетенций в массив []int
-	if err := parseStringToIntSlice(competencyIDs, &material.CompetencyIDs); err != nil {
-		return models.Material{}, fmt.Errorf("error parsing competency IDs: %w", err)
-	}
-
 	return material, nil
 }
 
 func (r *MaterialRepository) UpdateMaterial(material models.Material) error {
-	query := `UPDATE material SET title = $1, description = $2, type = $3, content = $4 WHERE material_id = $5`
-	_, err := r.db.Exec(query, material.Title, material.Description, material.Type, material.Content, material.MaterialID)
+	tx, err := r.db.Begin()
 	if err != nil {
-		return fmt.Errorf("error updating material: %w", err)
+		return fmt.Errorf("failed to start transaction: %w", err)
 	}
+
+	query := `UPDATE material SET title = $1, description = $2, type = $3, content = $4 WHERE material_id = $5`
+	_, err = tx.Exec(query, material.Title, material.Description, material.Type, material.Content, material.MaterialID)
+	if err != nil {
+		tx.Rollback()
+		return fmt.Errorf("failed to update material: %w", err)
+	}
+
+	_, err = tx.Exec("DELETE FROM materialcompetency WHERE material_id = $1", material.MaterialID)
+	if err != nil {
+		tx.Rollback()
+		return fmt.Errorf("error deleting old competency links: %w", err)
+	}
+
+	for _, competencyID := range material.Competencies {
+		_, err := tx.Exec("INSERT INTO materialcompetency (material_id, competency_id) VALUES ($1, $2) ON CONFLICT DO NOTHING", material.MaterialID, competencyID)
+		if err != nil {
+			tx.Rollback()
+			return nil
+		}
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		tx.Rollback()
+		return fmt.Errorf("failed to commit transaction: %w", err)
+	}
+
 	return nil
+}
+
+func (r *MaterialRepository) GetAllMaterials() ([]models.MaterialResponse, error) {
+	var materials []models.MaterialResponse
+	query := `
+		SELECT m.material_id, m.title, m.description, mt.type AS type_name, m.content, m.create_date,
+		       array_agg(c.name) AS competencies
+		FROM Material m
+		LEFT JOIN MaterialType mt ON m.type = mt.type_id
+		LEFT JOIN MaterialCompetency mc ON m.material_id = mc.material_id
+		LEFT JOIN Competency c ON mc.competency_id = c.competency_id
+		GROUP BY m.material_id, mt.type
+	`
+	err := r.db.Select(&materials, query)
+	if err != nil {
+		return nil, fmt.Errorf("error fetching all materials: %w", err)
+	}
+	return materials, nil
 }
 
 func (r *MaterialRepository) DeleteMaterial(id int) error {
@@ -148,17 +120,5 @@ func (r *MaterialRepository) DeleteMaterial(id int) error {
 	if err != nil {
 		return fmt.Errorf("error deleting material: %w", err)
 	}
-	return nil
-}
-
-func parseStringToIntSlice(input string, output *[]int) error {
-	input = strings.ReplaceAll(input, "{", "[")
-	input = strings.ReplaceAll(input, "}", "]")
-
-	err := json.Unmarshal([]byte(input), output)
-	if err != nil {
-		return fmt.Errorf("error unmarshaling array: %w", err)
-	}
-
 	return nil
 }

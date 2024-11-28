@@ -14,7 +14,7 @@ func (u *Usecase) CreateCompetency(comp models.Competency) error {
 		return errors.New("competency name is required")
 	}
 
-	if err := u.services.CreateCompetency(comp); err != nil {
+	if err := u.services.Competency.CreateCompetency(comp); err != nil {
 		log.Println("Error creating competency:", err)
 		return err
 	}
@@ -25,7 +25,7 @@ func (u *Usecase) CreateCompetency(comp models.Competency) error {
 
 func (u *Usecase) GetAllCompetencies() ([]models.Competency, error) {
 	log.Println("Fetching all competencies")
-	competencies, err := u.services.GetAllCompetencies()
+	competencies, err := u.services.Competency.GetAllCompetencies()
 	if err != nil {
 		log.Println("Error fetching all competencies:", err)
 		return nil, err
@@ -40,7 +40,7 @@ func (u *Usecase) UpdateCompetency(comp models.Competency) error {
 		log.Println("Failed to update competency: name is required")
 		return errors.New("competency name is required")
 	}
-	if err := u.services.UpdateCompetency(comp); err != nil {
+	if err := u.services.Competency.UpdateCompetency(comp); err != nil {
 		log.Println("Error updating competency:", err)
 		return err
 	}
@@ -50,7 +50,7 @@ func (u *Usecase) UpdateCompetency(comp models.Competency) error {
 
 func (u *Usecase) DeleteCompetency(id int) error {
 	log.Printf("Attempting to delete competency with ID %d\n", id)
-	if err := u.services.DeleteCompetency(id); err != nil {
+	if err := u.services.Competency.DeleteCompetency(id); err != nil {
 		log.Println("Error deleting competency:", err)
 		return err
 	}

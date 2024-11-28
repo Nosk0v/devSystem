@@ -5,16 +5,16 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-type Material interface {
+type MaterialRepositoryInterface interface {
 	CreateMaterial(material models.Material) (int, error)
 	LinkMaterialWithCompetencies(materialID int, competencyIDs []int) error
-	GetMaterialByID(id int) (models.Material, error)
+	GetMaterialByID(id int) (models.MaterialResponse, error)
 	UpdateMaterial(material models.Material) error
 	DeleteMaterial(id int) error
-	GetAllMaterials() ([]models.Material, error)
+	GetAllMaterials() ([]models.MaterialResponse, error)
 }
 
-type Competency interface {
+type CompetencyRepositoryInterface interface {
 	CreateCompetency(comp models.Competency) error
 	UpdateCompetency(comp models.Competency) error
 	DeleteCompetency(id int) error
@@ -22,13 +22,13 @@ type Competency interface {
 }
 
 type Repository struct {
-	Material
-	Competency
+	MaterialRepository   *MaterialRepository
+	CompetencyRepository *CompetencyRepository
 }
 
 func NewRepository(db *sqlx.DB) *Repository {
 	return &Repository{
-		Material:   NewMaterialRepository(db),
-		Competency: NewCompetencyRepository(db),
+		MaterialRepository:   NewMaterialRepository(db),
+		CompetencyRepository: NewCompetencyRepository(db),
 	}
 }
