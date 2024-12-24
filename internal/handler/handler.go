@@ -2,7 +2,9 @@ package handler
 
 import (
 	"devSystem/internal/usecase"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"time"
 )
 
 type Handler struct {
@@ -16,6 +18,17 @@ func NewHandler(usecases *usecase.Usecase) *Handler {
 func (h *Handler) InitRoutes() *gin.Engine {
 	router := gin.Default()
 
+	// Middleware для CORS
+	router.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"http://localhost:5173"},                   // Разрешенные домены
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"}, // Разрешенные HTTP-методы
+		AllowHeaders:     []string{"Content-Type", "Authorization"},           // Разрешенные заголовки
+		ExposeHeaders:    []string{"Content-Length"},                          // Заголовки, доступные клиенту
+		AllowCredentials: true,                                                // Разрешить отправку cookies
+		MaxAge:           12 * time.Hour,                                      // Кэширование CORS настроек
+	}))
+
+	// Группы маршрутов для материалов
 	materials := router.Group("/materials")
 	{
 		materials.GET("/:id", h.getMaterial)
@@ -25,6 +38,7 @@ func (h *Handler) InitRoutes() *gin.Engine {
 		materials.DELETE("/:id", h.deleteMaterial)
 	}
 
+	// Группы маршрутов для компетенций
 	competencies := router.Group("/competencies")
 	{
 		competencies.GET("", h.getAllCompetencies)

@@ -22,7 +22,6 @@ type CreateMaterialRequest struct {
 	Content      string `json:"content"`
 	Competencies []int  `json:"competencies"`
 }
-
 type MaterialResponse struct {
 	MaterialID   int            `db:"material_id" json:"material_id" example:"1"`
 	Title        string         `db:"title" json:"title" example:"Введение в Go"`

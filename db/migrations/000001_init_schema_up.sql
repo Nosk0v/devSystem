@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS MaterialType
 );
 -- Вставка по-умолчанию в таблицу MaterialType
 INSERT INTO MaterialType (type) VALUES
-    ('Курс'),
+    ('Статья'),
     ('Книга'),
     ('Видео');
 
@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS Competency
 (
     competency_id SERIAL PRIMARY KEY,
     name          VARCHAR(255) NOT NULL,
-    description   TEXT,
+    description   TEXT not null,
     parent_id     INTEGER REFERENCES competency ON DELETE SET NULL,
     create_date   TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -30,9 +30,9 @@ CREATE TABLE IF NOT EXISTS Material
 (
     material_id SERIAL PRIMARY KEY,
     title       VARCHAR(255) NOT NULL,
-    description TEXT,
+    description TEXT not null ,
     type        INTEGER REFERENCES MaterialType ON DELETE SET NULL,
-    content     TEXT,
+    content     TEXT not null,
     create_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
