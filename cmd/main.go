@@ -27,7 +27,6 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/jmoiron/sqlx"
 	"github.com/pressly/goose/v3"
-	_ "github.com/pressly/goose/v3"
 	"os"
 )
 
@@ -46,7 +45,12 @@ func main() {
 	if err != nil {
 		exloggo.Fatalf("failed to connect to database: %v", err)
 	}
-	defer db.Close()
+	defer func(db *sqlx.DB) {
+		err := db.Close()
+		if err != nil {
+
+		}
+	}(db)
 
 	skipMigrations := os.Getenv("SKIP_MIGRATIONS")
 	if skipMigrations == "true" {
