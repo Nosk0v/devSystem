@@ -28,7 +28,7 @@ type Service struct {
 
 func NewService(repo *repository.Repository) *Service {
 	return &Service{
-		Material:   NewMaterialService(repo.MaterialRepository),     // Используем MaterialRepository
-		Competency: NewCompetencyService(repo.CompetencyRepository), // Используем CompetencyRepository
+		Material:   NewMaterialService(repo.MaterialRepository),
+		Competency: NewCompetencyService(repo.CompetencyRepository),
 	}
 }
