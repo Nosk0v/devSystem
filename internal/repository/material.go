@@ -22,12 +22,13 @@ func (r *MaterialRepository) CreateMaterial(material models.Material) (int, erro
 	log.Printf("Executing query: %s with params: %+v\n", query, material)
 
 	var materialID int
-	err := r.db.QueryRow(query, material.Title, material.Description, material.Type, material.Content, material.CreateDate).Scan(&materialID)
+	err := r.db.QueryRow(query, material.Title, material.Description, material.TypeID, material.Content, material.CreateDate).Scan(&materialID)
 	if err != nil {
 		return 0, fmt.Errorf("error creating material: %w", err)
 	}
 
 	return materialID, nil
+
 }
 
 func (r *MaterialRepository) LinkMaterialWithCompetencies(materialID int, competencyIDs []int) error {
@@ -52,12 +53,27 @@ func (r *MaterialRepository) GetMaterialByID(id int) (models.MaterialResponse, e
 		LEFT JOIN Competency c ON mc.competency_id = c.competency_id
 		WHERE m.material_id = $1
 		GROUP BY m.material_id, mt.type
-	`
+`
 	err := r.db.Get(&material, query, id)
 	if err != nil {
 		return models.MaterialResponse{}, fmt.Errorf("error fetching material by ID: %w", err)
 	}
 	return material, nil
+}
+
+func (r *MaterialRepository) GetMaterialTypeByID(id int) (models.MaterialType, error) {
+	var materialType models.MaterialType
+	query := `
+		SELECT mt.type_id, mt.type
+		FROM MaterialType mt
+		WHERE mt. type_id = $1
+		GROUP BY mt.type_id
+`
+	err := r.db.Get(&materialType, query, id)
+	if err != nil {
+		return models.MaterialType{}, fmt.Errorf("error fetching material type by ID: %w", err)
+	}
+	return materialType, nil
 }
 
 func (r *MaterialRepository) UpdateMaterial(material models.Material) error {
@@ -67,7 +83,7 @@ func (r *MaterialRepository) UpdateMaterial(material models.Material) error {
 	}
 
 	query := `UPDATE material SET title = $1, description = $2, type = $3, content = $4 WHERE material_id = $5`
-	_, err = tx.Exec(query, material.Title, material.Description, material.Type, material.Content, material.MaterialID)
+	_, err = tx.Exec(query, material.Title, material.Description, material.TypeID, material.Content, material.MaterialID)
 	if err != nil {
 		tx.Rollback()
 		return fmt.Errorf("failed to update material: %w", err)
@@ -112,6 +128,20 @@ func (r *MaterialRepository) GetAllMaterials() ([]models.MaterialResponse, error
 		return nil, fmt.Errorf("error fetching all materials: %w", err)
 	}
 	return materials, nil
+}
+
+func (r *MaterialRepository) GetAllMaterialTypes() ([]models.MaterialType, error) {
+	var materialTypes []models.MaterialType
+	query := `
+		SELECT mt.type_id, mt.type
+		FROM MaterialType mt
+		ORDER BY mt.type_id
+	`
+	err := r.db.Select(&materialTypes, query)
+	if err != nil {
+		return nil, fmt.Errorf("error fetching all material types: %w", err)
+	}
+	return materialTypes, nil
 }
 
 func (r *MaterialRepository) DeleteMaterial(id int) error {

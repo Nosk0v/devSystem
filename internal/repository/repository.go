@@ -12,6 +12,8 @@ type MaterialRepositoryInterface interface {
 	UpdateMaterial(material models.Material) error
 	DeleteMaterial(id int) error
 	GetAllMaterials() ([]models.MaterialResponse, error)
+	GetMaterialTypeByID(id int) (models.MaterialType, error)
+	GetAllMaterialTypes() ([]models.MaterialType, error)
 }
 
 type CompetencyRepositoryInterface interface {

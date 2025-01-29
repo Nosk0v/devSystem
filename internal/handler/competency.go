@@ -49,7 +49,7 @@ func (h *Handler) createCompetency(c *gin.Context) {
 	log.Printf("Received input in handler: %+v\n", input)
 
 	if input.CreateDate.IsZero() {
-		input.CreateDate = time.Now()
+		input.CreateDate = time.Now().UTC()
 	}
 	if err := h.usecases.CreateCompetency(input); err != nil {
 		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: "Error creating competency"})

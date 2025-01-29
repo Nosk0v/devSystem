@@ -6,20 +6,17 @@ import (
 )
 
 type Material struct {
-	MaterialID   int       `json:"material_id" example:"1"`
-	Title        string    `json:"title" example:"Введение в Go"`
-	Description  string    `json:"description" example:"Руководство для начинающих по программированию на языке Go"`
-	Type         int       `json:"type_id" example:"2"`
-	Content      string    `json:"content" example:"Go - статически типизированный..."`
+	MaterialID int `json:"material_id" example:"1"`
+	CreateMaterialRequest
 	Competencies []int     `json:"competencies" example:"[1, 3, 5]"`
 	CreateDate   time.Time `json:"create_date" example:"2024-11-28T15:04:05Z"`
 }
 
 type CreateMaterialRequest struct {
-	Title        string `json:"title" binding:"required"`
-	Description  string `json:"description"`
-	TypeID       int    `json:"type_id"`
-	Content      string `json:"content"`
+	Title        string `json:"title" example:"Введение в Go"`
+	Description  string `json:"description" example:"Руководство для начинающих по программированию на языке Go"`
+	TypeID       int    `json:"type_id" example:"2"`
+	Content      string `json:"content" example:"Go - статически типизированный..."`
 	Competencies []int  `json:"competencies"`
 }
 type MaterialResponse struct {

@@ -58,6 +58,22 @@ func (u *Usecase) GetAllMaterials() ([]models.MaterialResponse, error) {
 	return response, nil
 }
 
+func (u *Usecase) GetAllMaterialTypes() ([]models.MaterialType, error) {
+	materialTypes, err := u.services.Material.GetAllMaterialTypes()
+	if err != nil {
+		return nil, fmt.Errorf("error fetching all materialTypes: %w", err)
+	}
+	var response []models.MaterialType
+	for _, materialTypes := range materialTypes {
+		response = append(response, models.MaterialType{
+			TypeID: materialTypes.TypeID,
+			Type:   materialTypes.Type,
+		})
+
+	}
+	return response, nil
+}
+
 func (u *Usecase) GetMaterial(id int) (*models.MaterialResponse, error) {
 	if id <= 0 {
 		log.Printf("Invalid material ID: %d", id) // Логируем некорректный ID
@@ -84,6 +100,32 @@ func (u *Usecase) GetMaterial(id int) (*models.MaterialResponse, error) {
 	}
 
 	return response, nil
+}
+
+func (u *Usecase) GetMaterialType(id int) (*models.MaterialType, error) {
+	if id <= 0 {
+		log.Printf("Invalid material type ID: %d", id) // Логируем некорректный ID
+		return nil, fmt.Errorf("invalid material type ID: %d", id)
+	}
+
+	log.Printf("Fetching material type with ID: %d", id)
+
+	materialType, err := u.services.Material.GetMaterialTypeByID(id)
+
+	if err != nil {
+		log.Printf("Error fetching material type with ID %d: %v", id, err)
+		return nil, fmt.Errorf("error fetching material type with ID %d: %w", id, err)
+	}
+
+	log.Printf("Fetched material type: %+v", materialType)
+
+	response := &models.MaterialType{
+		TypeID: materialType.TypeID,
+		Type:   materialType.Type,
+	}
+
+	return response, nil
+
 }
 
 func (u *Usecase) UpdateMaterial(material models.Material) error {

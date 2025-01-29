@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"time"
 )
 
 // GetMaterial godoc
@@ -45,15 +46,52 @@ func (h *Handler) getMaterial(c *gin.Context) {
 	c.JSON(http.StatusOK, material)
 }
 
+// GetMaterialType godoc
+// @Summary Получить тип материала по ID
+// @Description Получение сведений о типе материале по его ID.
+// @Tags materials
+// @Accept json
+// @Produce json
+// @Param id path int true "ID типа материала"
+// @Success 200 {object} models.MaterialType
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /materialsType/{id} [get]
+func (h *Handler) getMaterialType(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		log.Printf("Invalid material type ID from request: %v", c.Param("id"))
+		c.JSON(http.StatusBadRequest, ErrorResponse{Error: "Invalid material type ID"})
+		return
+	}
+
+	materialType, err := h.usecases.GetMaterialType(id)
+	if err != nil {
+		log.Printf("Error fetching material type with ID %d: %v", id, err)
+		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: "Error fetching material type"})
+		return
+	}
+
+	if materialType == nil {
+		log.Printf("Material type with ID %d not found", id)
+		c.JSON(http.StatusNotFound, ErrorResponse{Error: "Material type not found"})
+		return
+	}
+
+	log.Printf("Returning material type with ID %d: %+v", id, materialType)
+	c.JSON(http.StatusOK, materialType)
+}
+
 // GetAllMaterials godoc
 // @Summary Получить все материалы
 // @Description Получение списка со всеми материалами.
 // @Tags materials
 // @Accept json
 // @Produce json
-// @Success 200 {array} models.MaterialResponse
+// @Success 200 {array} models.MaterialType
 // @Failure 500 {object} ErrorResponse
-// @Router /materials [get]
+// @Router /materialsType [get]
 func (h *Handler) getAllMaterials(c *gin.Context) {
 	log.Println("Fetching all materials request received")
 	materials, err := h.usecases.GetAllMaterials()
@@ -64,6 +102,25 @@ func (h *Handler) getAllMaterials(c *gin.Context) {
 	}
 
 	log.Printf("Returning list of materials: %d items", len(materials))
+	c.JSON(http.StatusOK, materials)
+}
+
+// GetAllMaterialTypes godoc
+// @Summary Получить все типы материалов
+// @Description Получение списка со всеми типами материалов.
+// @Tags materials
+// @Accept json
+// @Produce json
+// @Success 200 {array} models.MaterialResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /materials [get]
+func (h *Handler) getAllMaterialTypes(c *gin.Context) {
+	materials, err := h.usecases.GetAllMaterialTypes()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: "Error fetching material types"})
+		return
+	}
+
 	c.JSON(http.StatusOK, materials)
 }
 
@@ -79,21 +136,17 @@ func (h *Handler) getAllMaterials(c *gin.Context) {
 // @Failure 500 {object} handler.ErrorResponse
 // @Router /materials [post]
 func (h *Handler) createMaterial(c *gin.Context) {
-	var input models.CreateMaterialRequest
+	var input models.Material
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, ErrorResponse{Error: "Invalid input"})
 		return
 	}
 
-	material := models.Material{
-		Title:        input.Title,
-		Description:  input.Description,
-		Type:         input.TypeID,
-		Content:      input.Content,
-		Competencies: input.Competencies,
+	if input.CreateDate.IsZero() {
+		input.CreateDate = time.Now().UTC()
 	}
 
-	materialID, err := h.usecases.CreateMaterial(material)
+	materialID, err := h.usecases.CreateMaterial(input)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: "Error creating material"})
 		return
@@ -128,22 +181,13 @@ func (h *Handler) updateMaterial(c *gin.Context) {
 		return
 	}
 
-	var input models.CreateMaterialRequest
+	var input models.Material
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, ErrorResponse{Error: "Invalid input"})
 		return
 	}
-
-	material := models.Material{
-		MaterialID:   id,
-		Title:        input.Title,
-		Description:  input.Description,
-		Type:         input.TypeID,
-		Content:      input.Content,
-		Competencies: input.Competencies,
-	}
-
-	err = h.usecases.UpdateMaterial(material)
+	input.MaterialID = id
+	err = h.usecases.UpdateMaterial(input)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: "Error updating material"})
 		return

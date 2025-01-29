@@ -12,6 +12,8 @@ type Material interface {
 	DeleteMaterial(id int) error
 	GetAllMaterials() ([]models.MaterialResponse, error)
 	LinkMaterialWithCompetencies(materialID int, competencyIDs []int) error
+	GetMaterialTypeByID(id int) (models.MaterialType, error)
+	GetAllMaterialTypes() ([]models.MaterialType, error)
 }
 
 type Competency interface {

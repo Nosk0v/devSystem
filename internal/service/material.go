@@ -30,12 +30,28 @@ func (m *MaterialService) GetMaterialByID(id int) (models.MaterialResponse, erro
 	return material, nil
 }
 
+func (m *MaterialService) GetMaterialTypeByID(id int) (models.MaterialType, error) {
+	materialType, err := m.repo.GetMaterialTypeByID(id)
+	if err != nil {
+		return models.MaterialType{}, fmt.Errorf("error fetching material type by ID: %w", err)
+	}
+	return materialType, nil
+}
+
 func (m *MaterialService) GetAllMaterials() ([]models.MaterialResponse, error) {
 	materials, err := m.repo.GetAllMaterials()
 	if err != nil {
 		return nil, fmt.Errorf("error fetching all materials: %w", err)
 	}
 	return materials, nil
+}
+
+func (m *MaterialService) GetAllMaterialTypes() ([]models.MaterialType, error) {
+	materialTypes, err := m.repo.GetAllMaterialTypes()
+	if err != nil {
+		return nil, fmt.Errorf("error fetching all material types: %w", err)
+	}
+	return materialTypes, nil
 }
 
 func (s *MaterialService) UpdateMaterial(material models.Material) error {
