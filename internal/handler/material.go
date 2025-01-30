@@ -89,7 +89,7 @@ func (h *Handler) getMaterialType(c *gin.Context) {
 // @Tags materials
 // @Accept json
 // @Produce json
-// @Success 200 {array} models.MaterialType
+// @Success 200 {array} models.MaterialResponse
 // @Failure 500 {object} ErrorResponse
 // @Router /materialsType [get]
 func (h *Handler) getAllMaterials(c *gin.Context) {
@@ -111,7 +111,7 @@ func (h *Handler) getAllMaterials(c *gin.Context) {
 // @Tags materials
 // @Accept json
 // @Produce json
-// @Success 200 {array} models.MaterialResponse
+// @Success 200 {array} models.MaterialType
 // @Failure 500 {object} ErrorResponse
 // @Router /materials [get]
 func (h *Handler) getAllMaterialTypes(c *gin.Context) {

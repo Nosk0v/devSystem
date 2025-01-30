@@ -30,6 +30,6 @@ type MaterialResponse struct {
 }
 
 type MaterialType struct {
-	TypeID int    `db:"type_id"`
-	Type   string `db:"type"`
+	TypeID int    `db:"type_id" json:"type_id" example:"1"`
+	Type   string `db:"type" json:"type" example:"Видео"`
 }
