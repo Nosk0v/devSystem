@@ -28,7 +28,6 @@ func (h *Handler) InitRoutes() *gin.Engine {
 		MaxAge:           12 * time.Hour,                                      // Кэширование CORS настроек
 	}))
 
-	// Группы маршрутов для материалов
 	materials := router.Group("/materials")
 	{
 		materials.GET("/:id", h.getMaterial)
@@ -38,7 +37,6 @@ func (h *Handler) InitRoutes() *gin.Engine {
 		materials.DELETE("/:id", h.deleteMaterial)
 
 	}
-
 	materialsType := router.Group("/materialsType")
 	{
 		materialsType.GET("/:id", h.getMaterialType)

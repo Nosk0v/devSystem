@@ -24,7 +24,6 @@ import (
 	"devSystem/server"
 	"fmt"
 	"github.com/execaus/exloggo"
-	"github.com/gin-contrib/cors"
 	"github.com/jmoiron/sqlx"
 	"github.com/pressly/goose/v3"
 	"os"
@@ -99,12 +98,6 @@ func applyMigrations(db *sqlx.DB) error {
 
 func runServer(srv *server.Server, handler *handler.Handler, port string) {
 	ginEngine := handler.InitRoutes()
-	ginEngine.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:5173"}, // Указываем разрешенные источники
-		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE"},
-		AllowHeaders:     []string{"Origin", "Content-Type", "Accept"},
-		AllowCredentials: true,
-	}))
 
 	if err := srv.Run(port, ginEngine); err != nil {
 		if err.Error() != "http: Server closed" {
