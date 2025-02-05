@@ -14,6 +14,7 @@ type Material interface {
 	LinkMaterialWithCompetencies(materialID int, competencyIDs []int) error
 	GetMaterialTypeByID(id int) (models.MaterialType, error)
 	GetAllMaterialTypes() ([]models.MaterialType, error)
+	CreateMaterialType(materialType models.MaterialType) (int, error)
 }
 
 type Competency interface {

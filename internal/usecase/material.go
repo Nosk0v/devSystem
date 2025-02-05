@@ -26,6 +26,18 @@ func (u *Usecase) CreateMaterial(material models.Material) (int, error) {
 	return materialID, nil
 }
 
+func (u *Usecase) CreateMaterialType(materialType models.MaterialType) (int, error) {
+	if materialType.Type == "" {
+		return 0, fmt.Errorf("material type name is required")
+	}
+	materialTypeID, err := u.services.Material.CreateMaterialType(materialType)
+	if err != nil {
+		return 0, fmt.Errorf("error creating material type: %w", err)
+	}
+
+	return materialTypeID, nil
+}
+
 func (u *Usecase) GetAllMaterials() ([]models.MaterialResponse, error) {
 	// Логируем запрос к данным
 	log.Printf("Fetching all materials from the service layer.")

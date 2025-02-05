@@ -31,6 +31,20 @@ func (r *MaterialRepository) CreateMaterial(material models.Material) (int, erro
 
 }
 
+func (r *MaterialRepository) CreateMaterialType(materialType models.MaterialType) (int, error) {
+	query := `
+		INSERT INTO materialType (type) VALUES ($1) RETURNING type_id
+`
+	var materialTypeID int
+	err := r.db.QueryRow(query, materialType.Type).Scan(&materialTypeID)
+	if err != nil {
+		return 0, fmt.Errorf("Error creating material type: %w", err)
+	}
+
+	return materialTypeID, nil
+
+}
+
 func (r *MaterialRepository) LinkMaterialWithCompetencies(materialID int, competencyIDs []int) error {
 	query := `INSERT INTO MaterialCompetency (material_id, competency_id) VALUES ($1, $2)`
 	for _, competencyID := range competencyIDs {

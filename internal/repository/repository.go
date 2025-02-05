@@ -14,6 +14,7 @@ type MaterialRepositoryInterface interface {
 	GetAllMaterials() ([]models.MaterialResponse, error)
 	GetMaterialTypeByID(id int) (models.MaterialType, error)
 	GetAllMaterialTypes() ([]models.MaterialType, error)
+	CreateMaterialType(materialType models.MaterialType) (int, error)
 }
 
 type CompetencyRepositoryInterface interface {

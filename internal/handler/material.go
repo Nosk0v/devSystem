@@ -161,6 +161,39 @@ func (h *Handler) createMaterial(c *gin.Context) {
 	c.JSON(http.StatusCreated, materialResponse)
 }
 
+// CreateMaterialType godoc
+// @Summary Создать тип материала
+// @Description Создание нового типа материала по входным данным.
+// @Tags materials
+// @Accept json
+// @Produce json
+// @Param material body models.MaterialType true "Входные данные"
+// @Success 201 {object} models.MaterialType
+// @Failure 400 {object} handler.ErrorResponse
+// @Failure 500 {object} handler.ErrorResponse
+// @Router /materialsType [post]
+func (h *Handler) createMaterialType(c *gin.Context) {
+	var input models.MaterialType
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, ErrorResponse{Error: "Invalid input"})
+		return
+	}
+
+	materialTypeID, err := h.usecases.CreateMaterialType(input)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: "Error creating material type"})
+		return
+	}
+
+	materialTypeResponse, err := h.usecases.GetMaterialType(materialTypeID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: "Error fetching material details"})
+		return
+	}
+
+	c.JSON(http.StatusCreated, materialTypeResponse)
+}
+
 // UpdateMaterial godoc
 // @Summary Обновить материал
 // @Description Обновление материала по его ID.

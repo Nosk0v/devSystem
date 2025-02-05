@@ -22,6 +22,15 @@ func (m *MaterialService) CreateMaterial(material models.Material) (int, error) 
 	return materialID, nil
 }
 
+func (m *MaterialService) CreateMaterialType(materialType models.MaterialType) (int, error) {
+	materialTypeID, err := m.repo.CreateMaterialType(materialType)
+	if err != nil {
+		return 0, fmt.Errorf("error creating material typeЖ %w", err)
+	}
+	return materialTypeID, nil
+
+}
+
 func (m *MaterialService) GetMaterialByID(id int) (models.MaterialResponse, error) {
 	material, err := m.repo.GetMaterialByID(id)
 	if err != nil {
