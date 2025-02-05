@@ -15,6 +15,7 @@ type Material interface {
 	GetMaterialTypeByID(id int) (models.MaterialType, error)
 	GetAllMaterialTypes() ([]models.MaterialType, error)
 	CreateMaterialType(materialType models.MaterialType) (int, error)
+	DeleteMaterialType(id int) error
 }
 
 type Competency interface {

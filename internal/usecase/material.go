@@ -152,8 +152,17 @@ func (u *Usecase) UpdateMaterial(material models.Material) error {
 }
 
 func (u *Usecase) DeleteMaterial(id int) error {
-	if err := u.services.Material.DeleteMaterial(id); err != nil {
+	err := u.services.Material.DeleteMaterial(id)
+	if err != nil {
 		return fmt.Errorf("error deleting material: %w", err)
+	}
+	return nil
+}
+
+func (u *Usecase) DeleteMaterialType(id int) error {
+	err := u.services.Material.DeleteMaterialType(id)
+	if err != nil {
+		return fmt.Errorf("error deleting material type: %w", err)
 	}
 	return nil
 }

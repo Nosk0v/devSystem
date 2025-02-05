@@ -42,6 +42,7 @@ func (h *Handler) InitRoutes() *gin.Engine {
 		materialsType.GET("/:id", h.getMaterialType)
 		materialsType.GET("", h.getAllMaterialTypes)
 		materialsType.POST("", h.createMaterialType)
+		materialsType.DELETE("/:id", h.deleteMaterialType)
 	}
 
 	// Группы маршрутов для компетенций

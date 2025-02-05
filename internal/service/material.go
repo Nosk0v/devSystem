@@ -63,12 +63,20 @@ func (m *MaterialService) GetAllMaterialTypes() ([]models.MaterialType, error) {
 	return materialTypes, nil
 }
 
-func (s *MaterialService) UpdateMaterial(material models.Material) error {
-	return s.repo.UpdateMaterial(material)
+func (m *MaterialService) UpdateMaterial(material models.Material) error {
+	return m.repo.UpdateMaterial(material)
 }
 
 func (m *MaterialService) DeleteMaterial(id int) error {
 	err := m.repo.DeleteMaterial(id)
+	if err != nil {
+		return fmt.Errorf("error deleting material: %w", err)
+	}
+	return nil
+}
+
+func (m *MaterialService) DeleteMaterialType(id int) error {
+	err := m.repo.DeleteMaterialType(id)
 	if err != nil {
 		return fmt.Errorf("error deleting material: %w", err)
 	}

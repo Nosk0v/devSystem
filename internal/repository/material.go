@@ -166,3 +166,12 @@ func (r *MaterialRepository) DeleteMaterial(id int) error {
 	}
 	return nil
 }
+
+func (r *MaterialRepository) DeleteMaterialType(id int) error {
+	query := `DELETE FROM MaterialType WHERE type_id = $1`
+	_, err := r.db.Exec(query, id)
+	if err != nil {
+		return fmt.Errorf("error deleting material type: %w", err)
+	}
+	return nil
+}

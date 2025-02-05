@@ -255,3 +255,30 @@ func (h *Handler) deleteMaterial(c *gin.Context) {
 
 	c.Status(http.StatusNoContent)
 }
+
+// DeleteMaterialType godoc
+// @Summary Удалить тип материала
+// @Description Удаление типа материала по его ID.
+// @Tags materials
+// @Accept json
+// @Produce json
+// @Param id path int true "ID типа материала"
+// @Success 204 {object} nil
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /materialsType/{id} [delete]
+func (h *Handler) deleteMaterialType(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, ErrorResponse{Error: "Invalid material type ID"})
+		return
+	}
+
+	if err := h.usecases.DeleteMaterialType(id); err != nil {
+		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: "Error deleting material type"})
+		return
+	}
+
+	c.Status(http.StatusNoContent)
+}
