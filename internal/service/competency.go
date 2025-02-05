@@ -20,7 +20,7 @@ func (c *CompetencyService) CreateCompetency(comp models.Competency) error {
 	return c.repo.CreateCompetency(comp)
 }
 
-func (c *CompetencyService) GetAllCompetencies() ([]models.Competency, error) {
+func (c *CompetencyService) GetAllCompetencies() ([]models.CompetencyResponse, error) {
 	competencies, err := c.repo.GetAllCompetencies()
 	if err != nil {
 		return nil, fmt.Errorf("error getting competencies: %w", err)
@@ -34,4 +34,12 @@ func (c *CompetencyService) UpdateCompetency(comp models.Competency) error {
 
 func (c *CompetencyService) DeleteCompetency(id int) error {
 	return c.repo.DeleteCompetency(id)
+}
+
+func (c *CompetencyService) GetCompetencyByID(id int) (models.CompetencyResponse, error) {
+	competency, err := c.repo.GetCompetencyByID(id)
+	if err != nil {
+		return models.CompetencyResponse{}, fmt.Errorf("error fetching competency by ID: %w", err)
+	}
+	return competency, nil
 }

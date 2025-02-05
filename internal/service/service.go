@@ -18,9 +18,10 @@ type Material interface {
 
 type Competency interface {
 	CreateCompetency(comp models.Competency) error
-	GetAllCompetencies() ([]models.Competency, error)
+	GetAllCompetencies() ([]models.CompetencyResponse, error)
 	UpdateCompetency(comp models.Competency) error
 	DeleteCompetency(id int) error
+	GetCompetencyByID(id int) (models.CompetencyResponse, error)
 }
 
 type Service struct {

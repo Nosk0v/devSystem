@@ -20,7 +20,7 @@ INSERT INTO MaterialType (type) VALUES
 CREATE TABLE IF NOT EXISTS Competency
 (
     competency_id SERIAL PRIMARY KEY,
-    name          VARCHAR(255) NOT NULL,
+    name          VARCHAR(255) NOT NULL unique,
     description   TEXT not null,
     parent_id     INTEGER REFERENCES competency ON DELETE SET NULL,
     create_date   TIMESTAMP DEFAULT CURRENT_TIMESTAMP

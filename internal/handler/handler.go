@@ -50,6 +50,7 @@ func (h *Handler) InitRoutes() *gin.Engine {
 		competencies.POST("", h.createCompetency)
 		competencies.PUT("/:id", h.updateCompetency)
 		competencies.DELETE("/:id", h.deleteCompetency)
+		competencies.GET("/:id", h.getCompetency)
 	}
 
 	return router

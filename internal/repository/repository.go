@@ -20,7 +20,8 @@ type CompetencyRepositoryInterface interface {
 	CreateCompetency(comp models.Competency) error
 	UpdateCompetency(comp models.Competency) error
 	DeleteCompetency(id int) error
-	GetAllCompetencies() ([]models.Competency, error)
+	GetAllCompetencies() ([]models.CompetencyResponse, error)
+	GetCompetencyById(id int) (models.CompetencyResponse, error)
 }
 
 type Repository struct {

@@ -48,12 +48,32 @@ func (r *CompetencyRepository) DeleteCompetency(id int) error {
 	return nil
 }
 
-func (r *CompetencyRepository) GetAllCompetencies() ([]models.Competency, error) {
-	var competencies []models.Competency
-	query := `SELECT * FROM competency`
+func (r *CompetencyRepository) GetAllCompetencies() ([]models.CompetencyResponse, error) {
+	var competencies []models.CompetencyResponse
+	query := `
+		SELECT c.competency_id, c.name, c.description, COALESCE(p.name, '') AS parent_name, c.create_date
+		FROM Competency c
+		LEFT JOIN Competency p ON c.parent_id = p.competency_id
+		ORDER BY c.competency_id
+`
 	err := r.db.Select(&competencies, query)
 	if err != nil {
 		return nil, fmt.Errorf("error fetching all competencies: %w", err)
 	}
 	return competencies, nil
+}
+
+func (r CompetencyRepository) GetCompetencyByID(id int) (models.CompetencyResponse, error) {
+	var competency models.CompetencyResponse
+	query := `
+		SELECT c.competency_id, c.name, c.description, COALESCE(p.name, '') AS parent_name, c.create_date
+		FROM Competency c
+		LEFT JOIN Competency p ON c.parent_id = p.competency_id
+		WHERE c.competency_id = $1
+`
+	err := r.db.Get(&competency, query, id)
+	if err != nil {
+		return models.CompetencyResponse{}, fmt.Errorf("error fetching competency by ID: %w", err)
+	}
+	return competency, nil
 }

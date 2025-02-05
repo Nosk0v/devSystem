@@ -3,6 +3,7 @@ package usecase
 import (
 	"devSystem/models"
 	"errors"
+	"fmt"
 	"log"
 )
 
@@ -23,15 +24,25 @@ func (u *Usecase) CreateCompetency(comp models.Competency) error {
 	return nil
 }
 
-func (u *Usecase) GetAllCompetencies() ([]models.Competency, error) {
+func (u *Usecase) GetAllCompetencies() ([]models.CompetencyResponse, error) {
 	log.Println("Fetching all competencies")
 	competencies, err := u.services.Competency.GetAllCompetencies()
 	if err != nil {
 		log.Println("Error fetching all competencies:", err)
 		return nil, err
 	}
+	var response []models.CompetencyResponse
+	for _, competency := range competencies {
+		response = append(response, models.CompetencyResponse{
+			CompetencyID: competency.CompetencyID,
+			Name:         competency.Name,
+			Description:  competency.Description,
+			ParentName:   competency.ParentName,
+			CreateDate:   competency.CreateDate,
+		})
+	}
 	log.Println("Successfully fetched all competencies, count:", len(competencies))
-	return competencies, nil
+	return response, nil
 }
 
 func (u *Usecase) UpdateCompetency(comp models.Competency) error {
@@ -56,4 +67,21 @@ func (u *Usecase) DeleteCompetency(id int) error {
 	}
 	log.Printf("Successfully deleted competency with ID %d\n", id)
 	return nil
+}
+
+func (u *Usecase) GetCompetencyByID(id int) (*models.CompetencyResponse, error) {
+	competency, err := u.services.Competency.GetCompetencyByID(id)
+	if err != nil {
+		return nil, fmt.Errorf("error feching competency with ID %d: %w", id, err)
+	}
+
+	response := &models.CompetencyResponse{
+		CompetencyID: competency.CompetencyID,
+		Name:         competency.Name,
+		Description:  competency.Description,
+		ParentName:   competency.ParentName,
+		CreateDate:   competency.CreateDate,
+	}
+
+	return response, nil
 }

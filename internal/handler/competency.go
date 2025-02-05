@@ -15,7 +15,7 @@ import (
 // @Tags competencies
 // @Accept json
 // @Produce json
-// @Success 200 {array} models.Competency
+// @Success 200 {array} models.CompetencyResponse
 // @Failure 500 {object} ErrorResponse
 // @Router /competencies [get]
 func (h *Handler) getAllCompetencies(c *gin.Context) {
@@ -119,4 +119,41 @@ func (h *Handler) deleteCompetency(c *gin.Context) {
 	}
 
 	c.Status(http.StatusNoContent)
+}
+
+// GetCompetency godoc
+// @Summary Получить компетенцию по ID
+// @Description Получение сведений компетенции по её ID.
+// @Tags competencies
+// @Accept json
+// @Produce json
+// @Param id path int true "ID компетенции"
+// @Success 200 {object} models.CompetencyResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /competencies/{id} [get]
+func (h *Handler) getCompetency(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		log.Printf("Invalid competency ID from request: %v", c.Param("id"))
+		c.JSON(http.StatusBadRequest, ErrorResponse{Error: "Invalid competency ID"})
+		return
+	}
+
+	competency, err := h.usecases.GetCompetencyByID(id)
+	if err != nil {
+		log.Printf("Error fetching competency with ID %d: %v", id, err)
+		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: "Error fetching competency"})
+		return
+	}
+
+	if competency == nil {
+		log.Printf("Competency with ID %d not found", id)
+		c.JSON(http.StatusNotFound, ErrorResponse{Error: "Competency not found"})
+		return
+	}
+
+	log.Printf("Returning Competency with ID %d: %+v", id, competency)
+	c.JSON(http.StatusOK, competency)
 }

@@ -26,7 +26,7 @@ type MaterialResponse struct {
 	TypeName     string         `db:"type_name" json:"type_name" example:"Статья"`
 	Content      string         `db:"content" json:"content" example:"Go - статически типизированный..."`
 	Competencies pq.StringArray `db:"competencies" json:"competencies" swaggertype:"array,string" example:"[\"Основы ООП\", \"Знание синтаксиса\"]"`
-	CreateDate   string         `db:"create_date" json:"create_date" example:"2024-11-28T15:04:05Z"`
+	CreateDate   time.Time      `db:"create_date" json:"create_date" example:"2024-11-28T15:04:05Z"`
 }
 
 type MaterialType struct {
