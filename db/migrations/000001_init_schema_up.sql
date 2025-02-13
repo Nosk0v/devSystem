@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS goose_db_version (
 CREATE TABLE IF NOT EXISTS MaterialType
 (
     type_id SERIAL PRIMARY KEY,
-    type    VARCHAR(50) NOT NULL
+    type    VARCHAR(50) NOT NULL unique
 );
 -- Вставка по-умолчанию в таблицу MaterialType
 INSERT INTO MaterialType (type) VALUES

@@ -18,7 +18,6 @@ func NewHandler(usecases *usecase.Usecase) *Handler {
 func (h *Handler) InitRoutes() *gin.Engine {
 	router := gin.Default()
 
-	// Middleware для CORS
 	router.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"http://localhost:5173"},                   // Разрешенные домены
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"}, // Разрешенные HTTP-методы
@@ -45,7 +44,6 @@ func (h *Handler) InitRoutes() *gin.Engine {
 		materialsType.DELETE("/:id", h.deleteMaterialType)
 	}
 
-	// Группы маршрутов для компетенций
 	competencies := router.Group("/competencies")
 	{
 		competencies.GET("", h.getAllCompetencies)
