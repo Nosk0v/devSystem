@@ -39,7 +39,6 @@ func (u *Usecase) CreateMaterialType(materialType models.MaterialType) (int, err
 }
 
 func (u *Usecase) GetAllMaterials() ([]models.MaterialResponse, error) {
-	// Логируем запрос к данным
 	log.Printf("Fetching all materials from the service layer.")
 
 	materials, err := u.services.Material.GetAllMaterials()
