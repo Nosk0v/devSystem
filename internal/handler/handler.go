@@ -19,24 +19,29 @@ func (h *Handler) InitRoutes() *gin.Engine {
 	router := gin.Default()
 
 	router.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:5173"},                   // Разрешенные домены
-		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"}, // Разрешенные HTTP-методы
-		AllowHeaders:     []string{"Content-Type", "Authorization"},           // Разрешенные заголовки
-		ExposeHeaders:    []string{"Content-Length"},                          // Заголовки, доступные клиенту
-		AllowCredentials: true,                                                // Разрешить отправку cookies
-		MaxAge:           12 * time.Hour,                                      // Кэширование CORS настроек
+		AllowOrigins:     []string{"http://localhost:5173"},
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Content-Type", "Authorization"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
 	}))
 
-	materials := router.Group("/materials")
+	auth := router.Group("/auth")
+	{
+		auth.POST("/sign-in", h.signIn)
+	}
+
+	materials := router.Group("/materials", h.UserIdentityMiddleware)
 	{
 		materials.GET("/:id", h.getMaterial)
 		materials.GET("", h.getAllMaterials)
 		materials.POST("", h.createMaterial)
 		materials.PUT("/:id", h.updateMaterial)
 		materials.DELETE("/:id", h.deleteMaterial)
-
 	}
-	materialsType := router.Group("/materialsType")
+
+	materialsType := router.Group("/materialsType", h.UserIdentityMiddleware)
 	{
 		materialsType.GET("/:id", h.getMaterialType)
 		materialsType.GET("", h.getAllMaterialTypes)
@@ -44,7 +49,7 @@ func (h *Handler) InitRoutes() *gin.Engine {
 		materialsType.DELETE("/:id", h.deleteMaterialType)
 	}
 
-	competencies := router.Group("/competencies")
+	competencies := router.Group("/competencies", h.UserIdentityMiddleware)
 	{
 		competencies.GET("", h.getAllCompetencies)
 		competencies.POST("", h.createCompetency)

@@ -26,14 +26,34 @@ type Competency interface {
 	GetCompetencyByID(id int) (models.CompetencyResponse, error)
 }
 
+type Account interface {
+	Get(email string) (*models.Account, error)
+}
+
+type Auth interface {
+	SignIn(input *models.SignInInput, accountPassword string) error
+}
+
+type JWTToken interface {
+	GenerateAccessToken(email string) (string, error)
+	GenerateRefreshToken(email string) (string, error)
+	ParseToken(tokenString string) (*models.JWTClaims, error)
+}
+
 type Service struct {
 	Material   Material
 	Competency Competency
+	Account    Account
+	Auth       Auth
+	JWTToken   JWTToken
 }
 
-func NewService(repo *repository.Repository) *Service {
+func NewService(repo *repository.Repository, config *models.ConfigService) *Service {
 	return &Service{
 		Material:   NewMaterialService(repo.MaterialRepository),
 		Competency: NewCompetencyService(repo.CompetencyRepository),
+		Account:    NewAccountService(repo.Account),
+		Auth:       NewAuthService(repo.Auth),
+		JWTToken:   NewJWTTokenService(config.Server),
 	}
 }

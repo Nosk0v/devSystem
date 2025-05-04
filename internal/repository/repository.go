@@ -5,6 +5,10 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
+type Sources struct {
+	db *sqlx.DB
+}
+
 type MaterialRepositoryInterface interface {
 	CreateMaterial(material models.Material) (int, error)
 	LinkMaterialWithCompetencies(materialID int, competencyIDs []int) error
@@ -26,14 +30,25 @@ type CompetencyRepositoryInterface interface {
 	GetCompetencyById(id int) (models.CompetencyResponse, error)
 }
 
+type Auth interface {
+}
+
+type Account interface {
+	Get(email string) (*models.Account, error)
+}
+
 type Repository struct {
 	MaterialRepository   *MaterialRepository
 	CompetencyRepository *CompetencyRepository
+	Auth
+	Account
 }
 
-func NewRepository(db *sqlx.DB) *Repository {
+func NewRepository(sources *Sources) *Repository {
 	return &Repository{
-		MaterialRepository:   NewMaterialRepository(db),
-		CompetencyRepository: NewCompetencyRepository(db),
+		MaterialRepository:   NewMaterialRepository(sources.db),
+		CompetencyRepository: NewCompetencyRepository(sources.db),
+		Auth:                 NewAuthPostgres(sources.db),
+		Account:              NewAccountPostgres(sources.db),
 	}
 }
