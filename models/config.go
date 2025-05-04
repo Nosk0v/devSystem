@@ -1,8 +1,8 @@
 package models
 
 type ConfigService struct {
-	Server          ServerConfig          `json:"server" binding:"required"`
-	TestingSystemDB TestingSystemDBConfig `json:"testing-system-database" binding:"required"`
+	Server              ServerConfig              `json:"server" binding:"required"`
+	DevelopmentSystemDB DevelopmentSystemDBConfig `json:"testing-system-database" binding:"required"`
 }
 
 type ServerConfig struct {
@@ -10,10 +10,11 @@ type ServerConfig struct {
 	JWTSecretKey string `json:"jwt_secret_key" binding:"required"`
 }
 
-type TestingSystemDBConfig struct {
+type DevelopmentSystemDBConfig struct {
 	Host     string `json:"db_host" binding:"required"`
 	Port     string `json:"db_port" binding:"required"`
 	Username string `json:"db_username" binding:"required"`
+	Password string `json:"db_password" binding:"required"`
 	DBName   string `json:"db_name" binding:"required"`
 	SSLMode  string `json:"db_ssl_mode" binding:"required"`
 }

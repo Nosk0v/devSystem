@@ -1,21 +1,20 @@
 package config
 
 import (
+	"devSystem/models"
 	"encoding/json"
 	"log"
 	"os"
-
-	"devSystem/internal/repository"
 )
 
-func Config(path string) (*repository.Config, error) {
+func Config(path string) (*models.ConfigService, error) {
 	b, err := os.ReadFile(path)
 	if err != nil {
 		log.Fatal("Error loading config:", err)
 		return nil, err
 	}
 
-	var config repository.Config
+	var config models.ConfigService
 	err = json.Unmarshal(b, &config)
 	if err != nil {
 		log.Fatal("Error parsing config:", err)

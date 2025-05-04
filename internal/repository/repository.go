@@ -6,7 +6,7 @@ import (
 )
 
 type Sources struct {
-	db *sqlx.DB
+	Db *sqlx.DB
 }
 
 type MaterialRepositoryInterface interface {
@@ -46,9 +46,9 @@ type Repository struct {
 
 func NewRepository(sources *Sources) *Repository {
 	return &Repository{
-		MaterialRepository:   NewMaterialRepository(sources.db),
-		CompetencyRepository: NewCompetencyRepository(sources.db),
-		Auth:                 NewAuthPostgres(sources.db),
-		Account:              NewAccountPostgres(sources.db),
+		MaterialRepository:   NewMaterialRepository(sources.Db),
+		CompetencyRepository: NewCompetencyRepository(sources.Db),
+		Auth:                 NewAuthPostgres(sources.Db),
+		Account:              NewAccountPostgres(sources.Db),
 	}
 }

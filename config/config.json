@@ -1,8 +1,14 @@
 {
-  "host": "localhost",
-  "port": "5432",
-  "username": "postgres",
-  "password": "1234",
-  "DBName": "development_system",
-  "SSLMode": "disable"
+  "server": {
+    "server_port": "8080",
+    "jwt_secret_key": "secret"
+  },
+  "testing-system-database": {
+    "db_host": "localhost",
+    "db_port": "5432",
+    "db_username": "postgres",
+    "db_password": "1234",
+    "db_name": "development_system",
+    "db_ssl_mode": "disable"
+  }
 }

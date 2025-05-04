@@ -21,6 +21,7 @@ import (
 	"devSystem/internal/repository"
 	"devSystem/internal/service"
 	"devSystem/internal/usecase"
+	"devSystem/models"
 	"devSystem/server"
 	"fmt"
 	"github.com/execaus/exloggo"
@@ -35,21 +36,21 @@ func main() {
 		configPath = "../config/config.json"
 	}
 
-	config, err := config.Config(configPath)
+	configService, err := config.Config(configPath)
 	if err != nil {
 		exloggo.Fatalf("failed to load configuration: %v", err)
 	}
 
-	db, err := setupDatabase(config)
-	if err != nil {
-		exloggo.Fatalf("failed to connect to database: %v", err)
+	environment := &models.Environment{
+		DBPassword: os.Getenv("DB_PASSWORD"),
 	}
-	defer func(db *sqlx.DB) {
-		err := db.Close()
-		if err != nil {
 
+	db := repository.NewDatabase(configService, environment)
+	defer func() {
+		if err := db.Close(); err != nil {
+			exloggo.Errorf("failed to close db connection: %v", err)
 		}
-	}(db)
+	}()
 
 	skipMigrations := os.Getenv("SKIP_MIGRATIONS")
 	if skipMigrations == "true" {
@@ -60,27 +61,19 @@ func main() {
 		}
 	}
 
-	repo := repository.NewRepository(db)
-	service := service.NewService(repo)
+	repositorySources := repository.Sources{
+		Db: db,
+	}
+
+	repo := repository.NewRepository(&repositorySources)
+	service := service.NewService(repo, configService)
 	usecase := usecase.NewUsecase(service)
 	handler := handler.NewHandler(usecase)
 
 	srv := server.Server{}
-	runServer(&srv, handler, "8080")
+	runServer(&srv, handler, configService.Server.Port)
 
 	srv.Shutdown(db, context.Background())
-}
-
-func setupDatabase(config *repository.Config) (*sqlx.DB, error) {
-	dbURL := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
-		config.Host, config.Port, config.Username, config.Password, config.DBName, config.SSLMode)
-
-	db, err := sqlx.Connect("pgx", dbURL)
-	if err != nil {
-		return nil, fmt.Errorf("failed to connect to database: %w", err)
-	}
-	exloggo.Info("database connection established successfully")
-	return db, nil
 }
 
 func applyMigrations(db *sqlx.DB) error {
@@ -91,14 +84,12 @@ func applyMigrations(db *sqlx.DB) error {
 	if err := goose.Up(db.DB, migrationsDir); err != nil {
 		return fmt.Errorf("failed to apply migrations: %w", err)
 	}
-
 	exloggo.Info("migrations applied successfully")
 	return nil
 }
 
 func runServer(srv *server.Server, handler *handler.Handler, port string) {
 	ginEngine := handler.InitRoutes()
-
 	if err := srv.Run(port, ginEngine); err != nil {
 		if err.Error() != "http: Server closed" {
 			exloggo.Fatalf("error occurred while running http server: %s", err.Error())
