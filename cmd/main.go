@@ -27,7 +27,9 @@ import (
 	"github.com/execaus/exloggo"
 	"github.com/jmoiron/sqlx"
 	"github.com/pressly/goose/v3"
+	"github.com/sirupsen/logrus"
 	"os"
+	"time"
 )
 
 func main() {
@@ -35,6 +37,7 @@ func main() {
 	if configPath == "" {
 		configPath = "../config/config.json"
 	}
+	logrus.Infof("Server UTC time: %v", time.Now().UTC())
 
 	configService, err := config.Config(configPath)
 	if err != nil {
@@ -89,6 +92,7 @@ func applyMigrations(db *sqlx.DB) error {
 }
 
 func runServer(srv *server.Server, handler *handler.Handler, port string) {
+	logrus.Infof("Server started at UTC time: %v", time.Now().UTC())
 	ginEngine := handler.InitRoutes()
 	if err := srv.Run(port, ginEngine); err != nil {
 		if err.Error() != "http: Server closed" {

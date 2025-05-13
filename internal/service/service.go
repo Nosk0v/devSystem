@@ -38,6 +38,7 @@ type JWTToken interface {
 	GenerateAccessToken(email string) (string, error)
 	GenerateRefreshToken(email string) (string, error)
 	ParseToken(tokenString string) (*models.JWTClaims, error)
+	GenerateAccessFromRefresh(refreshToken string) (string, error)
 }
 
 type Service struct {

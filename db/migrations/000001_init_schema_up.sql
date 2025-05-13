@@ -58,8 +58,8 @@ VALUES
 
 INSERT INTO "Account" ("email", "password", "name", "role")
 VALUES
-    ('user@test.ru', '$2a$10$QkjvoLbAM3bDlCgDqu/G4eMfdu0FcLAPSXj4OjwKBRXC79jiJaMtO', 'Иванов Иван Иванович', 0),
-    ('admin@test.ru', '$2a$10$QkjvoLbAM3bDlCgDqu/q4eMfdu0FcLAPSXj4OjwKBRXC79jiJaMtO', 'Петров Петр Петрович', 1);
+    ('user@test.ru', '$2a$10$hitarfnbzlubZuZtQKITq.6zoul4yywj1f6Sn0dl.N41uuRwGhXKm', 'Иванов Иван Иванович', 0),
+    ('admin@test.ru', '$2a$10$hitarfnbzlubZuZtQKITq.6zoul4yywj1f6Sn0dl.N41uuRwGhXKm', 'Петров Петр Петрович', 1);
 
 -- +goose Down
 DROP TABLE IF EXISTS "MaterialCompetency";

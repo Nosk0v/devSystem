@@ -46,3 +46,16 @@ func (u *Usecase) ParseToken(token string) (*models.JWTClaims, ErrorCode) {
 
 	return claims, Success
 }
+
+func (u *Usecase) Refresh(refreshToken string) (*models.AccessTokenOutput, ErrorCode) {
+	accessToken, err := u.services.JWTToken.GenerateAccessFromRefresh(refreshToken)
+	if err != nil {
+		logrus.Error("Ошибка при попытке обновить access token: ", err)
+		return nil, Unauthorized
+	}
+	output := &models.AccessTokenOutput{
+		AccessToken: accessToken,
+	}
+
+	return output, Success
+}

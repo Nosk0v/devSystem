@@ -6,6 +6,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
+	"strings"
 	"time"
 )
 
@@ -17,7 +18,7 @@ const (
 
 const (
 	AccessTokenTTL  = time.Minute * 15
-	RefreshTokenTTL = time.Hour * 24 * 7
+	RefreshTokenTTL = time.Second * 24 * 7
 )
 
 type JWTTokenService struct {
@@ -40,8 +41,8 @@ func (s *JWTTokenService) GenerateAccessToken(email string) (string, error) {
 		Email:     email,
 		TokenType: "access",
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(AccessTokenTTL).UTC()),
-			IssuedAt:  jwt.NewNumericDate(time.Now()),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(AccessTokenTTL).UTC()), // Убедитесь, что время в UTC
+			IssuedAt:  jwt.NewNumericDate(time.Now().UTC()),                     // Убедитесь, что время в UTC
 			ID:        uuid.New().String(),
 		},
 	}
@@ -54,12 +55,13 @@ func (s *JWTTokenService) GenerateRefreshToken(email string) (string, error) {
 		Email:     email,
 		TokenType: "refresh",
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(RefreshTokenTTL).UTC()),
-			IssuedAt:  jwt.NewNumericDate(time.Now()),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(RefreshTokenTTL).UTC()), // Убедитесь, что время в UTC
+			IssuedAt:  jwt.NewNumericDate(time.Now().UTC()),                      // Убедитесь, что время в UTC
 			ID:        uuid.New().String(),
 		},
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	logrus.Infof("Refresh token expires at: %v", time.Now().Add(RefreshTokenTTL).UTC()) // Логирование в UTC
 	return token.SignedString(getSecretKey(s.config))
 }
 
@@ -93,4 +95,39 @@ func (s *JWTTokenService) RefreshToken(token string) (string, error) {
 	}
 
 	return newRefreshToken, nil
+}
+
+func (s *JWTTokenService) GenerateAccessFromRefresh(refreshToken string) (string, error) {
+	if strings.HasPrefix(refreshToken, "Bearer ") {
+		refreshToken = strings.TrimPrefix(refreshToken, "Bearer ")
+		refreshToken = strings.TrimSpace(refreshToken)
+		logrus.Infof("Stripped 'Bearer ' from token, now: %v", refreshToken)
+	}
+
+	claims, err := s.ParseToken(refreshToken)
+	if err != nil {
+		logrus.Error("Failed to parse refresh token:", err)
+		return "", err
+	}
+
+	if claims.TokenType != "refresh" {
+		logrus.Error("Received token is not of type 'refresh', token type: ", claims.TokenType)
+		return "", errors.New("incorrect token type")
+	}
+
+	now := time.Now().UTC()
+	exp := claims.ExpiresAt.Time
+
+	if now.After(exp) {
+		logrus.Error("Refresh token is expired. Current time is after the token's expiration time.")
+		return "", errors.New("refresh token is expired")
+	}
+
+	accessToken, err := s.GenerateAccessToken(claims.Email)
+	if err != nil {
+		logrus.Error("Error generating access token:", err)
+		return "", err
+	}
+
+	return accessToken, nil
 }

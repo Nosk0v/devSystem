@@ -5,6 +5,7 @@ import (
 	"devSystem/models"
 	"errors"
 	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 	"net/http"
 	"strings"
 	"time"
@@ -58,12 +59,20 @@ func (h *Handler) UserIdentityMiddleware(c *gin.Context) {
 		return
 	}
 
+	// Логирование для отладки
+	logrus.Infof("Authorization token received: %v", token)
+
 	claims, err := h.usecases.ParseToken(token)
 	if err != usecase.Success {
+		logrus.Errorf("Error parsing token: %v", err)
 		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 		return
 	}
 
+	// Логирование успешного парсинга
+	logrus.Infof("Token successfully parsed. Claims: %+v", claims)
+
+	// Устанавливаем данные пользователя в контексте
 	setUserContext(c, claims.Email)
 
 	c.Next()
