@@ -1,6 +1,6 @@
 // @title devSystem API Документация
 // @version 1.0
-// @description Это пример API сервера для системы развития сотрудников под названием «Компетентум».
+// @description Это API сервер для сервиса «Развитие сотрудников» с целью автоматизации процессов управления персоналом.
 // @termsOfService http://swagger.io/terms/
 
 // @contact.name API Support

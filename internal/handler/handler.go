@@ -27,13 +27,15 @@ func (h *Handler) InitRoutes() *gin.Engine {
 		MaxAge:           12 * time.Hour,
 	}))
 
-	auth := router.Group("/auth")
-	{
-		auth.POST("/sign-in", h.signIn)
-		auth.POST("/refresh", h.refresh)
-	}
+	//auth := router.Group("/auth")
+	//{
+	//	auth.POST("/sign-in", h.signIn)
+	//	auth.POST("/refresh", h.refresh)
+	//}
 
-	materials := router.Group("/materials", h.UserIdentityMiddleware)
+	// materials := router.Group("/materials", h.UserIdentityMiddleware)
+
+	materials := router.Group("/materials")
 	{
 		materials.GET("/:id", h.getMaterial)
 		materials.GET("", h.getAllMaterials)
@@ -42,7 +44,7 @@ func (h *Handler) InitRoutes() *gin.Engine {
 		materials.DELETE("/:id", h.deleteMaterial)
 	}
 
-	materialsType := router.Group("/materialsType", h.UserIdentityMiddleware)
+	materialsType := router.Group("/materialsType")
 	{
 		materialsType.GET("/:id", h.getMaterialType)
 		materialsType.GET("", h.getAllMaterialTypes)
@@ -50,7 +52,7 @@ func (h *Handler) InitRoutes() *gin.Engine {
 		materialsType.DELETE("/:id", h.deleteMaterialType)
 	}
 
-	competencies := router.Group("/competencies", h.UserIdentityMiddleware)
+	competencies := router.Group("/competencies")
 	{
 		competencies.GET("", h.getAllCompetencies)
 		competencies.POST("", h.createCompetency)

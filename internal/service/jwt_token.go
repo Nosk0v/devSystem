@@ -17,8 +17,8 @@ const (
 )
 
 const (
-	AccessTokenTTL  = time.Minute * 15
-	RefreshTokenTTL = time.Second * 24 * 7
+	AccessTokenTTL  = time.Minute * 1
+	RefreshTokenTTL = time.Hour * 24 * 7
 )
 
 type JWTTokenService struct {
