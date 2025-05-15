@@ -33,6 +33,25 @@ CREATE TABLE IF NOT EXISTS "MaterialCompetency" (
                                                     PRIMARY KEY ("material_id", "competency_id")
 );
 
+CREATE TABLE IF NOT EXISTS "Course" (
+                                        "course_id" SERIAL PRIMARY KEY,
+                                        "title" VARCHAR(255) NOT NULL,
+                                        "description" TEXT NOT NULL,
+                                        "create_date" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS "CourseMaterial" (
+                                                "course_id" INTEGER NOT NULL REFERENCES "Course"("course_id") ON DELETE CASCADE,
+                                                "material_id" INTEGER NOT NULL REFERENCES "Material"("material_id") ON DELETE CASCADE,
+                                                PRIMARY KEY ("course_id", "material_id")
+);
+
+CREATE TABLE IF NOT EXISTS "CourseCompetency" (
+                                                  "course_id" INTEGER NOT NULL REFERENCES "Course"("course_id") ON DELETE CASCADE,
+                                                  "competency_id" INTEGER NOT NULL REFERENCES "Competency"("competency_id") ON DELETE CASCADE,
+                                                  PRIMARY KEY ("course_id", "competency_id")
+);
+
 CREATE TABLE IF NOT EXISTS "Role" (
                                       "id" SERIAL PRIMARY KEY,
                                       "name" VARCHAR
