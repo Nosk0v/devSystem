@@ -27,15 +27,13 @@ func (h *Handler) InitRoutes() *gin.Engine {
 		MaxAge:           12 * time.Hour,
 	}))
 
-	//auth := router.Group("/auth")
-	//{
-	//	auth.POST("/sign-in", h.signIn)
-	//	auth.POST("/refresh", h.refresh)
-	//}
+	auth := router.Group("/auth")
+	{
+		auth.POST("/sign-in", h.signIn)
+		auth.POST("/refresh", h.refresh)
+	}
 
-	// materials := router.Group("/materials", h.UserIdentityMiddleware)
-
-	materials := router.Group("/materials")
+	materials := router.Group("/materials", h.UserIdentityMiddleware)
 	{
 		materials.GET("/:id", h.getMaterial)
 		materials.GET("", h.getAllMaterials)
