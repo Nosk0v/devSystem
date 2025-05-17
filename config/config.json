@@ -4,7 +4,7 @@
     "jwt_secret_key": "secret"
   },
   "testing-system-database": {
-    "db_host": "localhost",
+    "db_host": "db",
     "db_port": "5432",
     "db_username": "postgres",
     "db_password": "1234",
