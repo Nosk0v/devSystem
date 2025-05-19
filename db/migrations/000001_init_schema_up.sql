@@ -35,7 +35,7 @@ CREATE TABLE IF NOT EXISTS "MaterialCompetency" (
 
 CREATE TABLE IF NOT EXISTS "Course" (
                                         "course_id" SERIAL PRIMARY KEY,
-                                        "title" VARCHAR(255) NOT NULL,
+                                        "title" VARCHAR(255) NOT NULL UNIQUE,
                                         "description" TEXT NOT NULL,
                                         "create_date" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -149,6 +149,9 @@ VALUES
 
 -- +goose Down
 DROP TABLE IF EXISTS "MaterialCompetency";
+DROP TABLE IF EXISTS  "Course";
+DROP TABLE IF EXISTS  "CourseMaterial";
+DROP TABLE IF EXISTS  "CourseCompetency";
 DROP TABLE IF EXISTS "Material";
 DROP TABLE IF EXISTS "Competency";
 DROP TABLE IF EXISTS "MaterialType";

@@ -32,8 +32,8 @@ func (h *Handler) InitRoutes() *gin.Engine {
 		auth.POST("/sign-in", h.signIn)
 		auth.POST("/refresh", h.refresh)
 	}
-
-	materials := router.Group("/materials", h.UserIdentityMiddleware)
+	//materials := router.Group("/materials", h.UserIdentityMiddleware)
+	materials := router.Group("/materials")
 	{
 		materials.GET("/:id", h.getMaterial)
 		materials.GET("", h.getAllMaterials)
