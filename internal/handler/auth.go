@@ -14,7 +14,7 @@ import (
 // @Accept json
 // @Produce json
 // @Param input body models.SignInInput true "Данные для входа"
-// @Success 200 {object} models.TokenResponse
+// @Success 200
 // @Failure 400 {object} ErrorResponse
 // @Failure 401 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse
@@ -42,7 +42,7 @@ func (h *Handler) signIn(c *gin.Context) {
 // @Tags auth
 // @Accept json
 // @Produce json
-// @Success 200 {object} models.TokenResponse
+// @Success 200
 // @Failure 401 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse
 // @Router /auth/refresh [post]
@@ -56,10 +56,8 @@ func (h *Handler) refresh(c *gin.Context) {
 		return
 	}
 
-	// Печатаем для проверки, что получили
 	logrus.Infof("Received refresh token: %v", request.RefreshToken)
 
-	// Проверяем, есть ли refresh token
 	if request.RefreshToken == "" {
 		c.JSON(401, ErrorResponse{Error: "Refresh token is missing"})
 		return

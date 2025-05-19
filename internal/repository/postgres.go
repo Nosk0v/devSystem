@@ -19,10 +19,16 @@ func NewPostgresDB(cfg *models.DevelopmentSystemDBConfig, password string) (*sql
 
 	return db, nil
 }
+
 func NewDatabase(config *models.ConfigService, env *models.Environment) *sqlx.DB {
 	fmt.Println("starting database connection...")
 
-	db, err := NewPostgresDB(&config.DevelopmentSystemDB, env.DBPassword)
+	password := config.DevelopmentSystemDB.Password
+	if env.DBPassword != "" {
+		password = env.DBPassword
+	}
+
+	db, err := NewPostgresDB(&config.DevelopmentSystemDB, password)
 	if err != nil {
 		logrus.Fatalf("failed to initialize development database: %s", err.Error())
 	}

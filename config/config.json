@@ -3,8 +3,8 @@
     "server_port": "8080",
     "jwt_secret_key": "secret"
   },
-  "testing-system-database": {
-    "db_host": "localhost",
+  "development-system-db": {
+    "db_host": "db",
     "db_port": "5432",
     "db_username": "postgres",
     "db_password": "1234",

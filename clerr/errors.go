@@ -6,7 +6,6 @@ const (
 	errorServer = "server error"
 )
 
-// Auth error
 const (
 	ErrorInvalidLoginOrPassword       = "invalid login or password"
 	ErrorExistAccount                 = "an account with this email already exists"

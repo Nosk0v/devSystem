@@ -64,6 +64,12 @@ CREATE TABLE IF NOT EXISTS "Account" (
                                          "role" INTEGER NOT NULL REFERENCES "Role"("id")
 );
 
+INSERT INTO "MaterialType" ("type")
+VALUES
+    ('Статья'),
+    ('Книга'),
+    ('Видео');
+
 INSERT INTO "Material" ("title", "description", "type", "content") VALUES
                                                                        ('Введение в разработку ПО', 'Основы подходов к разработке программ', 2, 'Содержимое книги о разработке'),
                                                                        ('Разработка Backend-сервисов', 'Принципы создания серверных решений', 1, 'Статья по backend'),
@@ -130,11 +136,6 @@ INSERT INTO "MaterialCompetency" ("material_id", "competency_id") VALUES
                                                                       (19, 19), (19, 3), (19, 14),
                                                                       (20, 20), (20, 8), (20, 18);
 
-INSERT INTO "MaterialType" ("type")
-VALUES
-    ('Статья'),
-    ('Книга'),
-    ('Видео');
 
 INSERT INTO "Role" ("id", "name")
 VALUES

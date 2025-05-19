@@ -24,7 +24,6 @@ import (
 	"devSystem/models"
 	"devSystem/server"
 	"fmt"
-	"github.com/execaus/exloggo"
 	"github.com/jmoiron/sqlx"
 	"github.com/pressly/goose/v3"
 	"github.com/sirupsen/logrus"
@@ -41,7 +40,7 @@ func main() {
 
 	configService, err := config.Config(configPath)
 	if err != nil {
-		exloggo.Fatalf("failed to load configuration: %v", err)
+		logrus.Fatalf("failed to load configuration: %v", err)
 	}
 
 	environment := &models.Environment{
@@ -51,16 +50,16 @@ func main() {
 	db := repository.NewDatabase(configService, environment)
 	defer func() {
 		if err := db.Close(); err != nil {
-			exloggo.Errorf("failed to close db connection: %v", err)
+			logrus.Errorf("failed to close db connection: %v", err)
 		}
 	}()
 
 	skipMigrations := os.Getenv("SKIP_MIGRATIONS")
 	if skipMigrations == "true" {
-		exloggo.Info("Skipping database migrations as per configuration")
+		logrus.Info("Skipping database migrations as per configuration")
 	} else {
 		if err := applyMigrations(db); err != nil {
-			exloggo.Fatalf("failed to apply migrations: %v", err)
+			logrus.Fatalf("failed to apply migrations: %v", err)
 		}
 	}
 
@@ -87,7 +86,7 @@ func applyMigrations(db *sqlx.DB) error {
 	if err := goose.Up(db.DB, migrationsDir); err != nil {
 		return fmt.Errorf("failed to apply migrations: %w", err)
 	}
-	exloggo.Info("migrations applied successfully")
+	logrus.Info("migrations applied successfully")
 	return nil
 }
 
@@ -96,7 +95,7 @@ func runServer(srv *server.Server, handler *handler.Handler, port string) {
 	ginEngine := handler.InitRoutes()
 	if err := srv.Run(port, ginEngine); err != nil {
 		if err.Error() != "http: Server closed" {
-			exloggo.Fatalf("error occurred while running http server: %s", err.Error())
+			logrus.Fatalf("error occurred while running http server: %s", err.Error())
 		}
 	}
 }
