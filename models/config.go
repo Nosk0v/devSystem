@@ -2,7 +2,7 @@ package models
 
 type ConfigService struct {
 	Server              ServerConfig              `json:"server" binding:"required"`
-	DevelopmentSystemDB DevelopmentSystemDBConfig `json:"testing-system-database" binding:"required"`
+	DevelopmentSystemDB DevelopmentSystemDBConfig `json:"development-system-db" binding:"required"`
 }
 
 type ServerConfig struct {
