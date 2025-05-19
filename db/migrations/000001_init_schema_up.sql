@@ -37,7 +37,8 @@ CREATE TABLE IF NOT EXISTS "Course" (
                                         "course_id" SERIAL PRIMARY KEY,
                                         "title" VARCHAR(255) NOT NULL UNIQUE,
                                         "description" TEXT NOT NULL,
-                                        "create_date" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                                        "create_date" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                                        "created_by" VARCHAR REFERENCES "Account"("email") ON DELETE SET NULL
 );
 
 CREATE TABLE IF NOT EXISTS "CourseMaterial" (

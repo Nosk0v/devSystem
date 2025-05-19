@@ -30,6 +30,16 @@ type CompetencyRepositoryInterface interface {
 	GetCompetencyById(id int) (models.CompetencyResponse, error)
 }
 
+type CourseRepositoryInterface interface {
+	CreateCourse(course models.Course) (int, error)
+	LinkCourseWithMaterials(courseID int, materialIDs []int) error
+	LinkCourseWithCompetencies(courseID int, competencyIDs []int) error
+	GetCourseByID(id int) (models.CourseResponse, error)
+	UpdateCourse(course models.Course) error
+	GetAllCourses() ([]models.CourseResponse, error)
+	DeleteCourse(id int) error
+}
+
 type Auth interface {
 }
 
@@ -42,6 +52,7 @@ type Repository struct {
 	CompetencyRepository *CompetencyRepository
 	Auth
 	Account
+	CourseRepository *CourseRepository
 }
 
 func NewRepository(sources *Sources) *Repository {
@@ -50,5 +61,6 @@ func NewRepository(sources *Sources) *Repository {
 		CompetencyRepository: NewCompetencyRepository(sources.Db),
 		Auth:                 NewAuthPostgres(sources.Db),
 		Account:              NewAccountPostgres(sources.Db),
+		CourseRepository:     NewCourseRepository(sources.Db),
 	}
 }
