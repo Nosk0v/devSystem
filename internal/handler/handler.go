@@ -19,7 +19,8 @@ func (h *Handler) InitRoutes() *gin.Engine {
 	router := gin.Default()
 
 	router.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:5173"},
+		//AllowOrigins: []string{"*"},
+		AllowOrigins:     []string{"http://localhost:25502", "http://localhost:82", "http://localhost:3000", "http://localhost:25504", "https://b.service-to.ru"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Content-Type", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
@@ -27,13 +28,15 @@ func (h *Handler) InitRoutes() *gin.Engine {
 		MaxAge:           12 * time.Hour,
 	}))
 
-	auth := router.Group("/auth")
+	api := router.Group("/api")
+
+	auth := api.Group("/auth")
 	{
 		auth.POST("/sign-in", h.signIn)
 		auth.POST("/refresh", h.refresh)
 	}
-	//materials := router.Group("/materials", h.UserIdentityMiddleware)
-	materials := router.Group("/materials")
+
+	materials := api.Group("/materials", h.UserIdentityMiddleware)
 	{
 		materials.GET("/:id", h.getMaterial)
 		materials.GET("", h.getAllMaterials)
@@ -42,7 +45,7 @@ func (h *Handler) InitRoutes() *gin.Engine {
 		materials.DELETE("/:id", h.deleteMaterial)
 	}
 
-	materialsType := router.Group("/materialsType")
+	materialsType := api.Group("/materialsType")
 	{
 		materialsType.GET("/:id", h.getMaterialType)
 		materialsType.GET("", h.getAllMaterialTypes)
@@ -50,7 +53,7 @@ func (h *Handler) InitRoutes() *gin.Engine {
 		materialsType.DELETE("/:id", h.deleteMaterialType)
 	}
 
-	competencies := router.Group("/competencies")
+	competencies := api.Group("/competencies")
 	{
 		competencies.GET("", h.getAllCompetencies)
 		competencies.POST("", h.createCompetency)
@@ -58,7 +61,7 @@ func (h *Handler) InitRoutes() *gin.Engine {
 		competencies.DELETE("/:id", h.deleteCompetency)
 		competencies.GET("/:id", h.getCompetency)
 	}
-	courses := router.Group("/courses")
+	courses := api.Group("/courses")
 	{
 		courses.GET("/:id", h.getCourse)
 		courses.GET("", h.getAllCourses)

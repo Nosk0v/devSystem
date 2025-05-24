@@ -16,36 +16,51 @@ package main
 
 import (
 	"context"
-	"devSystem/config"
 	"devSystem/internal/handler"
 	"devSystem/internal/repository"
 	"devSystem/internal/service"
 	"devSystem/internal/usecase"
 	"devSystem/models"
 	"devSystem/server"
+	"encoding/json"
 	"fmt"
+	"github.com/caarlos0/env/v6"
 	"github.com/jmoiron/sqlx"
+	"github.com/joho/godotenv"
 	"github.com/pressly/goose/v3"
 	"github.com/sirupsen/logrus"
+	"io"
+	"log"
 	"os"
+	"path/filepath"
+	"strings"
 	"time"
 )
 
 func main() {
-	configPath := os.Getenv("CONFIG_PATH")
-	if configPath == "" {
-		configPath = "../config/config.json"
-	}
-	logrus.Infof("Server UTC time: %v", time.Now().UTC())
-
-	configService, err := config.Config(configPath)
+	err := godotenv.Load(".env")
 	if err != nil {
-		logrus.Fatalf("failed to load configuration: %v", err)
+		log.Fatal("Error loading .env file: %s", err.Error())
 	}
 
-	environment := &models.Environment{
-		DBPassword: os.Getenv("DB_PASSWORD"),
+	environment := &models.Environment{}
+	configService := &models.ConfigService{}
+
+	if err := runLogger(); err != nil {
+		logrus.Fatal(err.Error())
 	}
+
+	if err := loadEnvironment(environment); err != nil {
+		logrus.Fatalf(err.Error())
+		return
+	}
+	if err := loadConfig(configService); err != nil {
+		logrus.Fatalf(err.Error())
+		return
+	}
+	logrus.Info("load local config success")
+
+	logrus.Infof("Server UTC time: %v", time.Now().UTC())
 
 	db := repository.NewDatabase(configService, environment)
 	defer func() {
@@ -93,9 +108,99 @@ func applyMigrations(db *sqlx.DB) error {
 func runServer(srv *server.Server, handler *handler.Handler, port string) {
 	logrus.Infof("Server started at UTC time: %v", time.Now().UTC())
 	ginEngine := handler.InitRoutes()
+
 	if err := srv.Run(port, ginEngine); err != nil {
 		if err.Error() != "http: Server closed" {
 			logrus.Fatalf("error occurred while running http server: %s", err.Error())
 		}
 	}
+}
+
+func runLogger() error {
+	logrus.SetReportCaller(true)
+	logrus.SetFormatter(&CustomFormatter{})
+
+	currentTime := time.Now()
+	yearMonthDir := fmt.Sprintf("logs/%d-%02d", currentTime.Year(), currentTime.Month())
+
+	err := os.MkdirAll(yearMonthDir, os.ModePerm)
+	if err != nil {
+		logrus.Error(err.Error())
+		return err
+	}
+
+	logFile := fmt.Sprintf("%s/%d-%02d-%02d.log", yearMonthDir, currentTime.Year(), currentTime.Month(), currentTime.Day())
+
+	logFileHandle, err := os.OpenFile(logFile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	if err != nil {
+		logrus.Error(err.Error())
+		return err
+	}
+
+	logrus.SetOutput(io.MultiWriter(os.Stdout, logFileHandle))
+
+	return nil
+}
+
+type CustomFormatter struct{}
+
+func (f *CustomFormatter) Format(entry *logrus.Entry) ([]byte, error) {
+	pwd, err := os.Getwd()
+	if err != nil {
+		panic(err)
+	}
+	prefixPath := pwd + "/"
+
+	shortFilePath := strings.TrimPrefix(filepath.ToSlash(entry.Caller.File), filepath.ToSlash(prefixPath))
+
+	var fields string
+	for key, value := range entry.Data {
+		fields += fmt.Sprintf("\"%s\":\"%v\",", key, value)
+	}
+
+	if len(fields) > 0 {
+		fields = fields[:len(fields)-1]
+	}
+
+	if len(fields) > 0 {
+		fields = ", " + fields
+	}
+
+	log := fmt.Sprintf(
+		"{\"level\":\"%s\",\"msg\":\"%s\",\"point\": \" %s:%d \",\"short_point\":\"%s:%d\", \"time\":\"%s\"%s}\n",
+		entry.Level.String(),
+		entry.Message,
+		entry.Caller.File,
+		entry.Caller.Line,
+		shortFilePath,
+		entry.Caller.Line,
+		entry.Time.Format(time.RFC3339),
+		fields,
+	)
+	return []byte(log), nil
+}
+
+func loadEnvironment(environment *models.Environment) error {
+	if err := godotenv.Load(".env"); err != nil {
+		logrus.Warning("load file not found, Environment variables load from Environment")
+	}
+	if err := env.Parse(environment); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func loadConfig(config *models.ConfigService) error {
+	file, err := os.ReadFile("./config/config.json")
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(file, &config)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

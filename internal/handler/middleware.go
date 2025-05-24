@@ -41,6 +41,10 @@ func (h *Handler) OnlyDevelopModeMiddleware(c *gin.Context) {
 }
 
 func (h *Handler) UserIdentityMiddleware(c *gin.Context) {
+	if c.Request.Method == http.MethodOptions {
+		c.AbortWithStatus(http.StatusNoContent)
+		return
+	}
 	authHeader := c.GetHeader("Authorization")
 	if authHeader == "" {
 		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Missing Authorization header"})

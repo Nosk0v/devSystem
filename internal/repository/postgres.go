@@ -22,8 +22,19 @@ func NewPostgresDB(cfg *models.DevelopmentSystemDBConfig, password string) (*sql
 
 func NewDatabase(config *models.ConfigService, env *models.Environment) *sqlx.DB {
 	fmt.Println("starting database connection...")
-
+	logrus.Infof("Using DB config: host=%s port=%s dbname=%s user=%s sslmode=%s",
+		config.DevelopmentSystemDB.Host,
+		config.DevelopmentSystemDB.Port,
+		config.DevelopmentSystemDB.DBName,
+		config.DevelopmentSystemDB.Username,
+		config.DevelopmentSystemDB.SSLMode,
+	)
 	password := config.DevelopmentSystemDB.Password
+	if env.DBPassword != "" {
+		logrus.Info("DB password loaded from environment")
+	} else {
+		logrus.Info("DB password loaded from config")
+	}
 	if env.DBPassword != "" {
 		password = env.DBPassword
 	}
