@@ -33,6 +33,19 @@ CREATE TABLE IF NOT EXISTS "MaterialCompetency" (
                                                     PRIMARY KEY ("material_id", "competency_id")
 );
 
+
+CREATE TABLE IF NOT EXISTS "CourseMaterial" (
+                                                "course_id" INTEGER NOT NULL REFERENCES "Course"("course_id") ON DELETE CASCADE,
+                                                "material_id" INTEGER NOT NULL REFERENCES "Material"("material_id") ON DELETE CASCADE,
+                                                PRIMARY KEY ("course_id", "material_id")
+);
+
+CREATE TABLE IF NOT EXISTS "CourseCompetency" (
+                                                  "course_id" INTEGER NOT NULL REFERENCES "Course"("course_id") ON DELETE CASCADE,
+                                                  "competency_id" INTEGER NOT NULL REFERENCES "Competency"("competency_id") ON DELETE CASCADE,
+                                                  PRIMARY KEY ("course_id", "competency_id")
+);
+
 CREATE TABLE IF NOT EXISTS "Role" (
                                       "id" SERIAL PRIMARY KEY,
                                       "name" VARCHAR
@@ -44,6 +57,16 @@ CREATE TABLE IF NOT EXISTS "Account" (
                                          "name" VARCHAR,
                                          "role" INTEGER NOT NULL REFERENCES "Role"("id")
 );
+
+
+CREATE TABLE IF NOT EXISTS "Course" (
+                                        "course_id" SERIAL PRIMARY KEY,
+                                        "title" VARCHAR(255) NOT NULL UNIQUE,
+                                        "description" TEXT NOT NULL,
+                                        "create_date" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                                        "created_by" VARCHAR REFERENCES "Account"("email") ON DELETE SET NULL
+);
+
 
 INSERT INTO "MaterialType" ("type")
 VALUES
@@ -120,16 +143,19 @@ INSERT INTO "MaterialCompetency" ("material_id", "competency_id") VALUES
 
 INSERT INTO "Role" ("id", "name")
 VALUES
-    (0, 'Пользователь'),
-    (1, 'Администратор');
+    (1, 'Пользователь'),
+    (0, 'Администратор');
 
 INSERT INTO "Account" ("email", "password", "name", "role")
 VALUES
-    ('user@test.ru', '$2a$10$hitarfnbzlubZuZtQKITq.6zoul4yywj1f6Sn0dl.N41uuRwGhXKm', 'Иванов Иван Иванович', 0),
-    ('admin@test.ru', '$2a$10$hitarfnbzlubZuZtQKITq.6zoul4yywj1f6Sn0dl.N41uuRwGhXKm', 'Петров Петр Петрович', 1);
+    ('1234@mail.ru', '$2a$10$hitarfnbzlubZuZtQKITq.6zoul4yywj1f6Sn0dl.N41uuRwGhXKm', 'Иванов Иван Иванович', 0),
+    ('5678@mail.ru', '$2a$10$hitarfnbzlubZuZtQKITq.6zoul4yywj1f6Sn0dl.N41uuRwGhXKm', 'Петров Петр Петрович', 1);
 
 -- +goose Down
 DROP TABLE IF EXISTS "MaterialCompetency";
+DROP TABLE IF EXISTS  "Course";
+DROP TABLE IF EXISTS  "CourseMaterial";
+DROP TABLE IF EXISTS  "CourseCompetency";
 DROP TABLE IF EXISTS "Material";
 DROP TABLE IF EXISTS "Competency";
 DROP TABLE IF EXISTS "MaterialType";

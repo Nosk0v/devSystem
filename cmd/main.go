@@ -38,9 +38,8 @@ import (
 )
 
 func main() {
-	err := godotenv.Load(".env")
-	if err != nil {
-		log.Fatal("Error loading .env file: %s", err.Error())
+	if err := loadEnvFallback(); err != nil {
+		log.Fatal("Error loading .env file: ", err)
 	}
 
 	environment := &models.Environment{}
@@ -192,15 +191,35 @@ func loadEnvironment(environment *models.Environment) error {
 }
 
 func loadConfig(config *models.ConfigService) error {
-	file, err := os.ReadFile("./config/config.json")
+	paths := []string{
+		"./config/config.json",
+		"../config/config.json",
+	}
+	var file []byte
+	var err error
+
+	for _, path := range paths {
+		file, err = os.ReadFile(path)
+		if err == nil {
+			break
+		}
+	}
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to read config file from known locations: %w", err)
 	}
 
-	err = json.Unmarshal(file, &config)
-	if err != nil {
-		return err
+	if err := json.Unmarshal(file, config); err != nil {
+		return fmt.Errorf("failed to parse config file: %w", err)
 	}
-
 	return nil
+}
+
+func loadEnvFallback() error {
+	if err := godotenv.Load(".env"); err == nil {
+		return nil
+	}
+	if err := godotenv.Load("../.env"); err == nil {
+		return nil
+	}
+	return fmt.Errorf("no .env file found in . or ../")
 }
