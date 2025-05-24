@@ -61,6 +61,14 @@ func (h *Handler) InitRoutes() *gin.Engine {
 		competencies.DELETE("/:id", h.deleteCompetency)
 		competencies.GET("/:id", h.getCompetency)
 	}
+	courses := api.Group("/courses")
+	{
+		courses.GET("/:id", h.getCourse)
+		courses.GET("", h.getAllCourses)
+		courses.POST("", h.createCourse)
+		courses.PUT("/:id", h.updateCourse)
+		courses.DELETE("/:id", h.deleteCourse)
+	}
 
 	return router
 }

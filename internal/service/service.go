@@ -41,12 +41,23 @@ type JWTToken interface {
 	GenerateAccessFromRefresh(refreshToken string) (string, error)
 }
 
+type Course interface {
+	CreateCourse(course models.Course) (int, error)
+	LinkCourseWithMaterials(courseID int, materialIDs []int) error
+	LinkCourseWithCompetencies(courseID int, competencyIDs []int) error
+	GetCourseByID(id int) (models.CourseResponse, error)
+	GetAllCourses() ([]models.CourseResponse, error)
+	UpdateCourse(course models.Course) error
+	DeleteCourse(id int) error
+}
+
 type Service struct {
 	Material   Material
 	Competency Competency
 	Account    Account
 	Auth       Auth
 	JWTToken   JWTToken
+	Course     Course
 }
 
 func NewService(repo *repository.Repository, config *models.ConfigService) *Service {
@@ -56,5 +67,6 @@ func NewService(repo *repository.Repository, config *models.ConfigService) *Serv
 		Account:    NewAccountService(repo.Account),
 		Auth:       NewAuthService(repo.Auth),
 		JWTToken:   NewJWTTokenService(config.Server),
+		Course:     NewCourseService(repo.CourseRepository),
 	}
 }
