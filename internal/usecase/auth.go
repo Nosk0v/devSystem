@@ -11,19 +11,20 @@ func (u *Usecase) SignIn(input *models.SignInInput) (*models.SignInOutput, Error
 		logrus.Error(err)
 		return nil, Unauthorized
 	}
+
 	err = u.services.Auth.SignIn(input, account.Password)
 	if err != nil {
 		logrus.Error(err.Error())
 		return nil, Unauthorized
 	}
 
-	accessToken, err := u.services.JWTToken.GenerateAccessToken(account.Email)
+	accessToken, err := u.services.JWTToken.GenerateAccessToken(account.Email, account.Role, account.OrganizationID)
 	if err != nil {
 		logrus.Error("ошибка генерации Access токена: ", err)
 		return nil, InternalServerError
 	}
 
-	refreshToken, err := u.services.JWTToken.GenerateRefreshToken(account.Email)
+	refreshToken, err := u.services.JWTToken.GenerateRefreshToken(account.Email, account.Role, account.OrganizationID)
 	if err != nil {
 		logrus.Error("ошибка генерации Refresh токена: ", err)
 		return nil, InternalServerError

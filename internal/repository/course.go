@@ -16,12 +16,12 @@ func NewCourseRepository(db *sqlx.DB) *CourseRepository {
 
 func (r *CourseRepository) CreateCourse(course models.Course) (int, error) {
 	query := `
-		INSERT INTO "Course" (title, description, created_by, create_date)
-		VALUES ($1, $2, $3, $4)
+		INSERT INTO "Course" (title, description, created_by, create_date, organization_id)
+		VALUES ($1, $2, $3, $4, $5)
 		RETURNING course_id
 	`
 	var courseID int
-	err := r.db.QueryRow(query, course.Title, course.Description, course.CreatedBy, course.CreateDate).Scan(&courseID)
+	err := r.db.QueryRow(query, course.Title, course.Description, course.CreatedBy, course.CreateDate, course.OrganizationID).Scan(&courseID)
 	if err != nil {
 		return 0, fmt.Errorf("error creating course: %w", err)
 	}
@@ -54,7 +54,7 @@ func (r *CourseRepository) LinkCourseWithCompetencies(courseID int, competencyID
 func (r *CourseRepository) GetCourseByID(id int) (models.CourseResponse, error) {
 	var course models.CourseResponse
 	query := `
-		SELECT c.course_id, c.title, c.description, c.created_by, c.create_date,
+		SELECT c.course_id, c.title, c.description, c.created_by, c.create_date, c.organization_id,
 		       array_agg(DISTINCT m.title) AS materials,
 		       array_agg(DISTINCT comp.name) AS competencies
 		FROM "Course" c
@@ -70,6 +70,47 @@ func (r *CourseRepository) GetCourseByID(id int) (models.CourseResponse, error) 
 		return models.CourseResponse{}, fmt.Errorf("error fetching course by ID: %w", err)
 	}
 	return course, nil
+}
+
+func (r *CourseRepository) GetAllCourses() ([]models.CourseResponse, error) {
+	var courses []models.CourseResponse
+	query := `
+		SELECT c.course_id, c.title, c.description, c.created_by, c.create_date, c.organization_id,
+		       array_agg(DISTINCT m.title) AS materials,
+		       array_agg(DISTINCT comp.name) AS competencies
+		FROM "Course" c
+		LEFT JOIN "CourseMaterial" cm ON c.course_id = cm.course_id
+		LEFT JOIN "Material" m ON cm.material_id = m.material_id
+		LEFT JOIN "CourseCompetency" cc ON c.course_id = cc.course_id
+		LEFT JOIN "Competency" comp ON cc.competency_id = comp.competency_id
+		GROUP BY c.course_id
+	`
+	err := r.db.Select(&courses, query)
+	if err != nil {
+		return nil, fmt.Errorf("error fetching all courses: %w", err)
+	}
+	return courses, nil
+}
+
+func (r *CourseRepository) GetCoursesByOrganization(orgID int) ([]models.CourseResponse, error) {
+	var courses []models.CourseResponse
+	query := `
+		SELECT c.course_id, c.title, c.description, c.created_by, c.create_date, c.organization_id,
+		       array_agg(DISTINCT m.title) AS materials,
+		       array_agg(DISTINCT comp.name) AS competencies
+		FROM "Course" c
+		LEFT JOIN "CourseMaterial" cm ON c.course_id = cm.course_id
+		LEFT JOIN "Material" m ON cm.material_id = m.material_id
+		LEFT JOIN "CourseCompetency" cc ON c.course_id = cc.course_id
+		LEFT JOIN "Competency" comp ON cc.competency_id = comp.competency_id
+		WHERE c.organization_id = $1
+		GROUP BY c.course_id
+	`
+	err := r.db.Select(&courses, query, orgID)
+	if err != nil {
+		return nil, fmt.Errorf("error fetching courses for organization: %w", err)
+	}
+	return courses, nil
 }
 
 func (r *CourseRepository) UpdateCourse(course models.Course) error {
@@ -122,26 +163,6 @@ func (r *CourseRepository) UpdateCourse(course models.Course) error {
 	}
 
 	return nil
-}
-
-func (r *CourseRepository) GetAllCourses() ([]models.CourseResponse, error) {
-	var courses []models.CourseResponse
-	query := `
-		SELECT c.course_id, c.title, c.description, c.created_by, c.create_date,
-		       array_agg(DISTINCT m.title) AS materials,
-		       array_agg(DISTINCT comp.name) AS competencies
-		FROM "Course" c
-		LEFT JOIN "CourseMaterial" cm ON c.course_id = cm.course_id
-		LEFT JOIN "Material" m ON cm.material_id = m.material_id
-		LEFT JOIN "CourseCompetency" cc ON c.course_id = cc.course_id
-		LEFT JOIN "Competency" comp ON cc.competency_id = comp.competency_id
-		GROUP BY c.course_id
-	`
-	err := r.db.Select(&courses, query)
-	if err != nil {
-		return nil, fmt.Errorf("error fetching all courses: %w", err)
-	}
-	return courses, nil
 }
 
 func (r *CourseRepository) DeleteCourse(id int) error {

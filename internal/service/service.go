@@ -35,8 +35,8 @@ type Auth interface {
 }
 
 type JWTToken interface {
-	GenerateAccessToken(email string) (string, error)
-	GenerateRefreshToken(email string) (string, error)
+	GenerateAccessToken(email string, role int, orgID *int) (string, error)
+	GenerateRefreshToken(email string, role int, orgID *int) (string, error)
 	ParseToken(tokenString string) (*models.JWTClaims, error)
 	GenerateAccessFromRefresh(refreshToken string) (string, error)
 }
@@ -47,6 +47,7 @@ type Course interface {
 	LinkCourseWithCompetencies(courseID int, competencyIDs []int) error
 	GetCourseByID(id int) (models.CourseResponse, error)
 	GetAllCourses() ([]models.CourseResponse, error)
+	GetCoursesByOrganization(organizationID int) ([]models.CourseResponse, error)
 	UpdateCourse(course models.Course) error
 	DeleteCourse(id int) error
 }

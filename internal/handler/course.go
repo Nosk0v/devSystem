@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"devSystem/internal/usecase"
 	"devSystem/models"
 	"github.com/gin-gonic/gin"
 	"log"
@@ -48,23 +49,32 @@ func (h *Handler) getCourse(c *gin.Context) {
 
 // GetAllCourses godoc
 // @Summary Получить все курсы
-// @Description Получение списка со всеми курсами.
+// @Description Получение списка курсов с учётом роли и организации.
 // @Tags courses
 // @Accept json
 // @Produce json
 // @Success 200 {array} models.CourseResponse
+// @Failure 401 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse
 // @Router /courses [get]
 func (h *Handler) getAllCourses(c *gin.Context) {
 	log.Println("Fetching all courses request received")
-	courses, err := h.usecases.GetAllCourses()
+
+	claims, err := h.GetJWTClaims(c)
 	if err != nil {
-		log.Printf("Error fetching all courses: %v", err)
+		log.Printf("Unauthorized: %v", err)
+		c.JSON(http.StatusUnauthorized, ErrorResponse{Error: "Unauthorized"})
+		return
+	}
+
+	courses, err := h.usecases.GetCoursesByClaims(claims)
+	if err != nil {
+		log.Printf("Error fetching courses: %v", err)
 		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: "Error fetching courses"})
 		return
 	}
 
-	log.Printf("Returning list of courses: %d items", len(courses))
+	log.Printf("Returning %d courses for role=%d, orgID=%v", len(courses), claims.Role, claims.OrganizationID)
 	c.JSON(http.StatusOK, courses)
 }
 
@@ -86,6 +96,14 @@ func (h *Handler) createCourse(c *gin.Context) {
 		return
 	}
 
+	claims, err := h.GetJWTClaims(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, ErrorResponse{Error: "Unauthorized"})
+		return
+	}
+
+	input.OrganizationID = *claims.OrganizationID
+	input.CreatedBy = claims.Email
 	if input.CreateDate.IsZero() {
 		input.CreateDate = time.Now().UTC()
 	}
@@ -96,13 +114,13 @@ func (h *Handler) createCourse(c *gin.Context) {
 		return
 	}
 
-	courseResponse, err := h.usecases.GetCourse(courseID)
+	course, err := h.usecases.GetCourse(courseID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: "Error fetching course details"})
+		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: "Error fetching course"})
 		return
 	}
 
-	c.JSON(http.StatusCreated, courseResponse)
+	c.JSON(http.StatusCreated, course)
 }
 
 // UpdateCourse godoc
@@ -132,6 +150,31 @@ func (h *Handler) updateCourse(c *gin.Context) {
 	}
 	input.CourseID = id
 
+	claims, err := h.GetJWTClaims(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, ErrorResponse{Error: "Unauthorized"})
+		return
+	}
+
+	existingCourse, err := h.usecases.GetCourse(id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: "Failed to fetch existing course"})
+		return
+	}
+	if existingCourse == nil {
+		c.JSON(http.StatusNotFound, ErrorResponse{Error: "Course not found"})
+		return
+	}
+
+	if claims.Role != usecase.RoleSuperAdmin {
+		if claims.OrganizationID == nil || *claims.OrganizationID != existingCourse.OrganizationID {
+			c.JSON(http.StatusForbidden, ErrorResponse{Error: "Access denied"})
+			return
+		}
+	}
+
+	input.OrganizationID = existingCourse.OrganizationID
+
 	err = h.usecases.UpdateCourse(input)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: "Error updating course"})
@@ -158,6 +201,29 @@ func (h *Handler) deleteCourse(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusBadRequest, ErrorResponse{Error: "Invalid course ID"})
 		return
+	}
+
+	claims, err := h.GetJWTClaims(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, ErrorResponse{Error: "Unauthorized"})
+		return
+	}
+
+	course, err := h.usecases.GetCourse(id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: "Failed to fetch course"})
+		return
+	}
+	if course == nil {
+		c.JSON(http.StatusNotFound, ErrorResponse{Error: "Course not found"})
+		return
+	}
+
+	if claims.Role != usecase.RoleSuperAdmin {
+		if claims.OrganizationID == nil || *claims.OrganizationID != course.OrganizationID {
+			c.JSON(http.StatusForbidden, ErrorResponse{Error: "Access denied"})
+			return
+		}
 	}
 
 	if err := h.usecases.DeleteCourse(id); err != nil {

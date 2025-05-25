@@ -52,6 +52,14 @@ func (s *CourseService) GetAllCourses() ([]models.CourseResponse, error) {
 	return courses, nil
 }
 
+func (s *CourseService) GetCoursesByOrganization(organizationID int) ([]models.CourseResponse, error) {
+	courses, err := s.repo.GetCoursesByOrganization(organizationID)
+	if err != nil {
+		return nil, fmt.Errorf("error getting courses by organization: %w", err)
+	}
+	return courses, nil
+}
+
 func (s *CourseService) UpdateCourse(course models.Course) error {
 	if err := s.repo.UpdateCourse(course); err != nil {
 		return fmt.Errorf("error updating course: %w", err)

@@ -37,6 +37,7 @@ type CourseRepositoryInterface interface {
 	GetCourseByID(id int) (models.CourseResponse, error)
 	UpdateCourse(course models.Course) error
 	GetAllCourses() ([]models.CourseResponse, error)
+	GetCoursesByOrganization(organizationID int) ([]models.CourseResponse, error)
 	DeleteCourse(id int) error
 }
 

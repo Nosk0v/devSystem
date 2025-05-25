@@ -36,13 +36,15 @@ func getSecretKey(config models.ServerConfig) []byte {
 	return []byte(config.JWTSecretKey)
 }
 
-func (s *JWTTokenService) GenerateAccessToken(email string) (string, error) {
+func (s *JWTTokenService) GenerateAccessToken(email string, role int, orgID *int) (string, error) {
 	claims := models.JWTClaims{
-		Email:     email,
-		TokenType: "access",
+		Email:          email,
+		TokenType:      "access",
+		Role:           role,
+		OrganizationID: orgID,
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(AccessTokenTTL).UTC()), // Убедитесь, что время в UTC
-			IssuedAt:  jwt.NewNumericDate(time.Now().UTC()),                     // Убедитесь, что время в UTC
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(AccessTokenTTL).UTC()),
+			IssuedAt:  jwt.NewNumericDate(time.Now().UTC()),
 			ID:        uuid.New().String(),
 		},
 	}
@@ -50,18 +52,19 @@ func (s *JWTTokenService) GenerateAccessToken(email string) (string, error) {
 	return token.SignedString(getSecretKey(s.config))
 }
 
-func (s *JWTTokenService) GenerateRefreshToken(email string) (string, error) {
+func (s *JWTTokenService) GenerateRefreshToken(email string, role int, orgID *int) (string, error) {
 	claims := models.JWTClaims{
-		Email:     email,
-		TokenType: "refresh",
+		Email:          email,
+		TokenType:      "refresh",
+		Role:           role,
+		OrganizationID: orgID,
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(RefreshTokenTTL).UTC()), // Убедитесь, что время в UTC
-			IssuedAt:  jwt.NewNumericDate(time.Now().UTC()),                      // Убедитесь, что время в UTC
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(RefreshTokenTTL).UTC()),
+			IssuedAt:  jwt.NewNumericDate(time.Now().UTC()),
 			ID:        uuid.New().String(),
 		},
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	logrus.Infof("Refresh token expires at: %v", time.Now().Add(RefreshTokenTTL).UTC()) // Логирование в UTC
 	return token.SignedString(getSecretKey(s.config))
 }
 
@@ -88,7 +91,7 @@ func (s *JWTTokenService) RefreshToken(token string) (string, error) {
 		return "", err
 	}
 
-	newRefreshToken, err := s.GenerateRefreshToken(claims.Email)
+	newRefreshToken, err := s.GenerateRefreshToken(claims.Email, claims.Role, claims.OrganizationID)
 	if err != nil {
 		logrus.Error(err.Error())
 		return "", err
@@ -115,15 +118,12 @@ func (s *JWTTokenService) GenerateAccessFromRefresh(refreshToken string) (string
 		return "", errors.New("incorrect token type")
 	}
 
-	now := time.Now().UTC()
-	exp := claims.ExpiresAt.Time
-
-	if now.After(exp) {
-		logrus.Error("Refresh token is expired. Current time is after the token's expiration time.")
+	if time.Now().UTC().After(claims.ExpiresAt.Time) {
+		logrus.Error("Refresh token is expired.")
 		return "", errors.New("refresh token is expired")
 	}
 
-	accessToken, err := s.GenerateAccessToken(claims.Email)
+	accessToken, err := s.GenerateAccessToken(claims.Email, claims.Role, claims.OrganizationID)
 	if err != nil {
 		logrus.Error("Error generating access token:", err)
 		return "", err

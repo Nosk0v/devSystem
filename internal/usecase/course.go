@@ -6,9 +6,18 @@ import (
 	"log"
 )
 
+const (
+	RoleAdmin      = 0
+	RoleUser       = 1
+	RoleSuperAdmin = 2
+)
+
 func (u *Usecase) CreateCourse(course models.Course) (int, error) {
 	if course.Title == "" {
 		return 0, fmt.Errorf("course title is required")
+	}
+	if course.OrganizationID <= 0 {
+		return 0, fmt.Errorf("organization is required")
 	}
 
 	courseID, err := u.services.Course.CreateCourse(course)
@@ -17,15 +26,13 @@ func (u *Usecase) CreateCourse(course models.Course) (int, error) {
 	}
 
 	if len(course.Competencies) > 0 {
-		err = u.services.Course.LinkCourseWithCompetencies(courseID, course.Competencies)
-		if err != nil {
+		if err := u.services.Course.LinkCourseWithCompetencies(courseID, course.Competencies); err != nil {
 			return 0, fmt.Errorf("error linking course with competencies: %w", err)
 		}
 	}
 
 	if len(course.Materials) > 0 {
-		err = u.services.Course.LinkCourseWithMaterials(courseID, course.Materials)
-		if err != nil {
+		if err := u.services.Course.LinkCourseWithMaterials(courseID, course.Materials); err != nil {
 			return 0, fmt.Errorf("error linking course with materials: %w", err)
 		}
 	}
@@ -47,62 +54,67 @@ func (u *Usecase) GetCourse(id int) (*models.CourseResponse, error) {
 		return nil, fmt.Errorf("error fetching course with ID %d: %w", id, err)
 	}
 
-	log.Printf("Fetched course: %+v", course)
-
-	response := &models.CourseResponse{
-		CourseID:     course.CourseID,
-		Title:        course.Title,
-		Description:  course.Description,
-		CreatedBy:    course.CreatedBy,
-		Competencies: course.Competencies,
-		Materials:    course.Materials,
-		CreateDate:   course.CreateDate,
-	}
-
-	return response, nil
+	return &models.CourseResponse{
+		CourseID:       course.CourseID,
+		Title:          course.Title,
+		Description:    course.Description,
+		CreatedBy:      course.CreatedBy,
+		Competencies:   course.Competencies,
+		Materials:      course.Materials,
+		CreateDate:     course.CreateDate,
+		OrganizationID: course.OrganizationID,
+	}, nil
 }
 
-func (u *Usecase) GetAllCourses() ([]models.CourseResponse, error) {
-	log.Printf("Fetching all courses from the service layer.")
+func (u *Usecase) GetCoursesByClaims(claims *models.JWTClaims) ([]models.CourseResponse, error) {
+	log.Printf("Fetching courses by role: %d and org: %v", claims.Role, claims.OrganizationID)
 
-	courses, err := u.services.Course.GetAllCourses()
-	if err != nil {
-		log.Printf("Error fetching all courses in usecase: %v", err)
-		return nil, fmt.Errorf("error fetching all courses: %w", err)
+	switch claims.Role {
+	case RoleSuperAdmin:
+		return u.getAllCourses()
+	case RoleAdmin, RoleUser:
+		if claims.OrganizationID == nil || *claims.OrganizationID <= 0 {
+			return nil, fmt.Errorf("organization is required for this role")
+		}
+		return u.getCoursesByOrganization(*claims.OrganizationID)
+	default:
+		return nil, fmt.Errorf("unauthorized role: %d", claims.Role)
 	}
-
-	var response []models.CourseResponse
-	for _, course := range courses {
-		log.Printf("Fetched course: %+v", course)
-
-		response = append(response, models.CourseResponse{
-			CourseID:     course.CourseID,
-			Title:        course.Title,
-			Description:  course.Description,
-			CreatedBy:    course.CreatedBy,
-			Competencies: course.Competencies,
-			Materials:    course.Materials,
-			CreateDate:   course.CreateDate,
-		})
-	}
-
-	log.Printf("Total courses fetched: %d", len(response))
-
-	return response, nil
 }
 
 func (u *Usecase) UpdateCourse(course models.Course) error {
-	err := u.services.Course.UpdateCourse(course)
-	if err != nil {
+	if course.OrganizationID <= 0 {
+		return fmt.Errorf("organization is required for update")
+	}
+	if err := u.services.Course.UpdateCourse(course); err != nil {
 		return fmt.Errorf("error updating course: %w", err)
 	}
 	return nil
 }
 
 func (u *Usecase) DeleteCourse(id int) error {
-	err := u.services.Course.DeleteCourse(id)
-	if err != nil {
+	if err := u.services.Course.DeleteCourse(id); err != nil {
 		return fmt.Errorf("error deleting course: %w", err)
 	}
 	return nil
+}
+
+// --- Приватные методы --- //
+
+func (u *Usecase) getAllCourses() ([]models.CourseResponse, error) {
+	log.Printf("Fetching all courses (superadmin only)")
+	courses, err := u.services.Course.GetAllCourses()
+	if err != nil {
+		return nil, fmt.Errorf("error fetching all courses: %w", err)
+	}
+	return courses, nil
+}
+
+func (u *Usecase) getCoursesByOrganization(orgID int) ([]models.CourseResponse, error) {
+	log.Printf("Fetching courses for organization: %d", orgID)
+	courses, err := u.services.Course.GetCoursesByOrganization(orgID)
+	if err != nil {
+		return nil, fmt.Errorf("error fetching courses by organization: %w", err)
+	}
+	return courses, nil
 }

@@ -73,10 +73,10 @@ func (h *Handler) UserIdentityMiddleware(c *gin.Context) {
 		return
 	}
 
-	// Логирование успешного парсинга
 	logrus.Infof("Token successfully parsed. Claims: %+v", claims)
 
-	// Устанавливаем данные пользователя в контексте
+	c.Set("claims", claims)
+
 	setUserContext(c, claims.Email)
 
 	c.Next()

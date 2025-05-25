@@ -5,6 +5,11 @@ CREATE TABLE IF NOT EXISTS "goose_db_version" (
                                                   "is_applied" BOOLEAN DEFAULT FALSE
 );
 
+CREATE TABLE IF NOT EXISTS "Organization" (
+                                              "organization_id" SERIAL PRIMARY KEY,
+                                              "name" VARCHAR(255) NOT NULL UNIQUE
+);
+
 CREATE TABLE IF NOT EXISTS "MaterialType" (
                                               "type_id" SERIAL PRIMARY KEY,
                                               "type" VARCHAR(50) NOT NULL UNIQUE
@@ -34,6 +39,32 @@ CREATE TABLE IF NOT EXISTS "MaterialCompetency" (
 );
 
 
+
+CREATE TABLE IF NOT EXISTS "Role" (
+                                      "id" SERIAL PRIMARY KEY,
+                                      "name" VARCHAR
+);
+
+CREATE TABLE IF NOT EXISTS "Account" (
+                                         "email" VARCHAR PRIMARY KEY,
+                                         "password" VARCHAR,
+                                         "name" VARCHAR,
+                                         "role" INTEGER NOT NULL REFERENCES "Role"("id"),
+                                         "organization_id" INTEGER REFERENCES "Organization"("organization_id") ON DELETE CASCADE
+);
+
+
+
+CREATE TABLE IF NOT EXISTS "Course" (
+                                        "course_id" SERIAL PRIMARY KEY,
+                                        "title" VARCHAR(255) NOT NULL UNIQUE,
+                                        "description" TEXT NOT NULL,
+                                        "create_date" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                                        "created_by" VARCHAR REFERENCES "Account"("email") ON DELETE SET NULL,
+                                        "organization_id" INTEGER REFERENCES "Organization"("organization_id") ON DELETE CASCADE
+);
+
+
 CREATE TABLE IF NOT EXISTS "CourseMaterial" (
                                                 "course_id" INTEGER NOT NULL REFERENCES "Course"("course_id") ON DELETE CASCADE,
                                                 "material_id" INTEGER NOT NULL REFERENCES "Material"("material_id") ON DELETE CASCADE,
@@ -46,26 +77,10 @@ CREATE TABLE IF NOT EXISTS "CourseCompetency" (
                                                   PRIMARY KEY ("course_id", "competency_id")
 );
 
-CREATE TABLE IF NOT EXISTS "Role" (
-                                      "id" SERIAL PRIMARY KEY,
-                                      "name" VARCHAR
-);
 
-CREATE TABLE IF NOT EXISTS "Account" (
-                                         "email" VARCHAR PRIMARY KEY,
-                                         "password" VARCHAR,
-                                         "name" VARCHAR,
-                                         "role" INTEGER NOT NULL REFERENCES "Role"("id")
-);
-
-
-CREATE TABLE IF NOT EXISTS "Course" (
-                                        "course_id" SERIAL PRIMARY KEY,
-                                        "title" VARCHAR(255) NOT NULL UNIQUE,
-                                        "description" TEXT NOT NULL,
-                                        "create_date" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                                        "created_by" VARCHAR REFERENCES "Account"("email") ON DELETE SET NULL
-);
+INSERT INTO "Organization" ("name") VALUES
+                                        ('ООО Альфа'),
+                                        ('ЗАО Омега');
 
 
 INSERT INTO "MaterialType" ("type")
@@ -139,17 +154,38 @@ INSERT INTO "MaterialCompetency" ("material_id", "competency_id") VALUES
                                                                       (18, 18), (18, 7), (18, 2),
                                                                       (19, 19), (19, 3), (19, 14),
                                                                       (20, 20), (20, 8), (20, 18);
-
-
+-- Роли
 INSERT INTO "Role" ("id", "name")
 VALUES
     (1, 'Пользователь'),
-    (0, 'Администратор');
+    (0, 'Администратор'),
+    (2, 'Супер админ');
 
-INSERT INTO "Account" ("email", "password", "name", "role")
-VALUES
-    ('1234@mail.ru', '$2a$10$hitarfnbzlubZuZtQKITq.6zoul4yywj1f6Sn0dl.N41uuRwGhXKm', 'Иванов Иван Иванович', 0),
-    ('5678@mail.ru', '$2a$10$hitarfnbzlubZuZtQKITq.6zoul4yywj1f6Sn0dl.N41uuRwGhXKm', 'Петров Петр Петрович', 1);
+-- Аккаунты
+INSERT INTO "Account" ("email", "password", "name", "role", "organization_id") VALUES
+                                                                                   ('1234@mail.ru', '$2a$10$hitarfnbzlubZuZtQKITq.6zoul4yywj1f6Sn0dl.N41uuRwGhXKm', 'Иванов Иван Иванович', 0, 1),
+                                                                                   ('5678@mail.ru', '$2a$10$hitarfnbzlubZuZtQKITq.6zoul4yywj1f6Sn0dl.N41uuRwGhXKm', 'Петров Петр Петрович', 1, 2),
+                                                                                   ('root@system.dev', '$2a$10$hitarfnbzlubZuZtQKITq.6zoul4yywj1f6Sn0dl.N41uuRwGhXKm', 'Суперадмин', 2, NULL);
+
+
+INSERT INTO "Course" ("title", "description", "created_by", "organization_id") VALUES
+                                                                                   ('Курс по Backend', 'Освоение серверной разработки на Go и PostgreSQL', '1234@mail.ru', 1),
+                                                                                   ('Frontend для начинающих', 'Изучение React и вёрстки с нуля', '5678@mail.ru', 2);
+
+-- Связи курс-материал
+INSERT INTO "CourseMaterial" ("course_id", "material_id") VALUES
+                                                              (1, 2), -- Backend курс → материал о Backend
+                                                              (1, 5), -- Backend курс → PostgreSQL
+                                                              (2, 3), -- Frontend курс → начало React
+                                                              (2, 6); -- Frontend курс → React интерактив
+
+-- Связи курс-компетенция
+INSERT INTO "CourseCompetency" ("course_id", "competency_id") VALUES
+                                                                  (1, 2), -- Backend Engineering
+                                                                  (1, 5), -- PostgreSQL
+                                                                  (2, 3), -- Frontend Engineering
+                                                                  (2, 6); -- React.js
+
 
 -- +goose Down
 DROP TABLE IF EXISTS "MaterialCompetency";
