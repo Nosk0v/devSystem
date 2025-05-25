@@ -32,6 +32,7 @@ type Account interface {
 
 type Auth interface {
 	SignIn(input *models.SignInInput, accountPassword string) error
+	SignUp(input *models.SignUpInput) error
 }
 
 type JWTToken interface {

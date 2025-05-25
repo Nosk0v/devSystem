@@ -3,6 +3,7 @@ package usecase
 import (
 	"devSystem/models"
 	"github.com/sirupsen/logrus"
+	"strings"
 )
 
 func (u *Usecase) SignIn(input *models.SignInInput) (*models.SignInOutput, ErrorCode) {
@@ -46,6 +47,18 @@ func (u *Usecase) ParseToken(token string) (*models.JWTClaims, ErrorCode) {
 	}
 
 	return claims, Success
+}
+func (u *Usecase) SignUp(input *models.SignUpInput) ErrorCode {
+	input.Role = 1
+	err := u.services.Auth.SignUp(input)
+	if err != nil {
+		if strings.Contains(err.Error(), "уже зарегистрирован") {
+			return ResourceAlreadyExist
+		}
+		logrus.Error("Ошибка в сервисе при создании аккаунта: ", err)
+		return InternalServerError
+	}
+	return ResourceCreated
 }
 
 func (u *Usecase) Refresh(refreshToken string) (*models.AccessTokenOutput, ErrorCode) {

@@ -71,3 +71,36 @@ func (h *Handler) refresh(c *gin.Context) {
 
 	h.sendResponseSuccess(c, output, processStatus)
 }
+
+// SignUp godoc
+// @Summary Регистрация пользователя
+// @Description Создание нового аккаунта
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param input body models.SignUpInput true "Данные для регистрации"
+// @Success 201 {object} models.SignUpOutput
+// @Failure 400 {object} ErrorResponse
+// @Failure 409 {object} ErrorResponse "Пользователь уже существует"
+// @Failure 500 {object} ErrorResponse
+// @Router /auth/sign-up [post]
+func (h *Handler) signUp(c *gin.Context) {
+	var input models.SignUpInput
+
+	if err := c.ShouldBindJSON(&input); err != nil {
+		logrus.WithError(err).Warn("Некорректный JSON при регистрации")
+		h.sendResponseSuccess(c, nil, usecase.BadRequest)
+		return
+	}
+
+	processStatus := h.usecases.SignUp(&input)
+
+	switch processStatus {
+	case usecase.ResourceCreated:
+		h.sendResponseSuccess(c, models.SignUpOutput{Message: "Регистрация прошла успешно"}, processStatus)
+	case usecase.ResourceAlreadyExist:
+		h.sendResponseSuccess(c, nil, processStatus)
+	default:
+		h.sendResponseSuccess(c, nil, usecase.InternalServerError)
+	}
+}

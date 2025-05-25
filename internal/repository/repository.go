@@ -42,6 +42,8 @@ type CourseRepositoryInterface interface {
 }
 
 type Auth interface {
+	CreateAccount(input *models.SignUpInput) error
+	AccountExists(email string) (bool, error)
 }
 
 type Account interface {
