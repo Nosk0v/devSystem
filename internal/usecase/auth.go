@@ -50,6 +50,7 @@ func (u *Usecase) ParseToken(token string) (*models.JWTClaims, ErrorCode) {
 }
 func (u *Usecase) SignUp(input *models.SignUpInput) ErrorCode {
 	input.Role = 1
+	input.OrganizationID = 2
 	err := u.services.Auth.SignUp(input)
 	if err != nil {
 		if strings.Contains(err.Error(), "уже зарегистрирован") {

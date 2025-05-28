@@ -23,7 +23,7 @@ import (
 // @Failure 500 {object} ErrorResponse
 // @Router /courses/{id} [get]
 func (h *Handler) getCourse(c *gin.Context) {
-	id, err := strconv.Atoi(c.Param("id"))
+	id, err := strconv.Atoi(c.Param("course_id"))
 	if err != nil {
 		log.Printf("Invalid course ID from request: %v", c.Param("id"))
 		c.JSON(http.StatusBadRequest, ErrorResponse{Error: "Invalid course ID"})
@@ -137,7 +137,7 @@ func (h *Handler) createCourse(c *gin.Context) {
 // @Failure 500 {object} ErrorResponse
 // @Router /courses/{id} [put]
 func (h *Handler) updateCourse(c *gin.Context) {
-	id, err := strconv.Atoi(c.Param("id"))
+	id, err := strconv.Atoi(c.Param("course_id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, ErrorResponse{Error: "Invalid course ID"})
 		return
@@ -197,7 +197,7 @@ func (h *Handler) updateCourse(c *gin.Context) {
 // @Failure 500 {object} ErrorResponse
 // @Router /courses/{id} [delete]
 func (h *Handler) deleteCourse(c *gin.Context) {
-	id, err := strconv.Atoi(c.Param("id"))
+	id, err := strconv.Atoi(c.Param("course_id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, ErrorResponse{Error: "Invalid course ID"})
 		return
@@ -232,4 +232,145 @@ func (h *Handler) deleteCourse(c *gin.Context) {
 	}
 
 	c.Status(http.StatusNoContent)
+}
+
+// CompleteCourse godoc
+// @Summary Завершить курс
+// @Description Отмечает курс как завершённый для пользователя
+// @Tags courses
+// @Accept json
+// @Produce json
+// @Param id path int true "ID курса"
+// @Success 200 {string} string "Course marked as completed"
+// @Failure 400 {object} ErrorResponse
+// @Failure 401 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /courses/{id}/complete [post]
+func (h *Handler) completeCourse(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("course_id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, ErrorResponse{Error: "Invalid course ID"})
+		return
+	}
+
+	claims, err := h.GetJWTClaims(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, ErrorResponse{Error: "Unauthorized"})
+		return
+	}
+
+	if err := h.usecases.CompleteCourse(claims.Email, id); err != nil {
+		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: "Failed to mark course as completed"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Course marked as completed"})
+}
+
+// MarkMaterialAsCompleted godoc
+// @Summary Отметить материал как пройденный
+// @Description Отмечает материал в курсе как пройденный пользователем
+// @Tags courses
+// @Accept json
+// @Produce json
+// @Param course_id path int true "ID курса"
+// @Param material_id path int true "ID материала"
+// @Success 200 {string} string "Material marked as completed"
+// @Failure 400 {object} ErrorResponse
+// @Failure 401 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /courses/{course_id}/materials/{material_id}/complete [post]
+func (h *Handler) markMaterialAsCompleted(c *gin.Context) {
+	courseID, err := strconv.Atoi(c.Param("course_id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, ErrorResponse{Error: "Invalid course ID"})
+		return
+	}
+
+	materialID, err := strconv.Atoi(c.Param("material_id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, ErrorResponse{Error: "Invalid material ID"})
+		return
+	}
+
+	claims, err := h.GetJWTClaims(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, ErrorResponse{Error: "Unauthorized"})
+		return
+	}
+
+	if err := h.usecases.MarkMaterialAsCompleted(claims.Email, courseID, materialID); err != nil {
+		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: "Failed to mark material as completed"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Material marked as completed"})
+}
+
+// GetCourseProgress godoc
+// @Summary Получить прогресс курса
+// @Description Получение списка ID завершённых материалов по курсу
+// @Tags courses
+// @Accept json
+// @Produce json
+// @Param id path int true "ID курса"
+// @Success 200 {object} gin.H{"completed_materials": []int}
+// @Failure 400 {object} ErrorResponse
+// @Failure 401 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /courses/{id}/progress [get]
+func (h *Handler) getCourseProgress(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("course_id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, ErrorResponse{Error: "Invalid course ID"})
+		return
+	}
+
+	claims, err := h.GetJWTClaims(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, ErrorResponse{Error: "Unauthorized"})
+		return
+	}
+
+	progress, err := h.usecases.GetUserCourseProgress(claims.Email, id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: "Failed to fetch course progress"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"completed_materials": progress})
+}
+
+// IsCourseCompleted godoc
+// @Summary Проверка завершения курса
+// @Description Проверяет, завершён ли курс пользователем
+// @Tags courses
+// @Accept json
+// @Produce json
+// @Param id path int true "ID курса"
+// @Success 200 {object} gin.H{"completed": bool}
+// @Failure 400 {object} ErrorResponse
+// @Failure 401 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /courses/{id}/completed [get]
+func (h *Handler) isCourseCompleted(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("course_id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, ErrorResponse{Error: "Invalid course ID"})
+		return
+	}
+
+	claims, err := h.GetJWTClaims(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, ErrorResponse{Error: "Unauthorized"})
+		return
+	}
+
+	isCompleted, err := h.usecases.IsCourseCompleted(claims.Email, id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: "Failed to check course completion"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"completed": isCompleted})
 }

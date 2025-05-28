@@ -39,6 +39,10 @@ type CourseRepositoryInterface interface {
 	GetAllCourses() ([]models.CourseResponse, error)
 	GetCoursesByOrganization(organizationID int) ([]models.CourseResponse, error)
 	DeleteCourse(id int) error
+	GetUserCourseProgress(userEmail string, courseID int) ([]int, error)
+	MarkMaterialAsCompleted(userEmail string, courseID int, materialID int) error
+	CompleteCourse(userEmail string, courseID int) error
+	IsCourseCompleted(userEmail string, courseID int) (bool, error)
 }
 
 type Auth interface {

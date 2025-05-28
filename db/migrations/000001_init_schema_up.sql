@@ -78,6 +78,24 @@ CREATE TABLE IF NOT EXISTS "CourseCompetency" (
 );
 
 
+CREATE TABLE IF NOT EXISTS "MaterialProgress" (
+                                                  "user_email" VARCHAR NOT NULL REFERENCES "Account"("email") ON DELETE CASCADE,
+                                                  "course_id" INTEGER NOT NULL REFERENCES "Course"("course_id") ON DELETE CASCADE,
+                                                  "material_id" INTEGER NOT NULL REFERENCES "Material"("material_id") ON DELETE CASCADE,
+                                                  "is_viewed" BOOLEAN DEFAULT TRUE,
+                                                  "viewed_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                                                  PRIMARY KEY ("user_email", "course_id", "material_id")
+);
+
+CREATE TABLE IF NOT EXISTS "CourseProgress" (
+                                                "progress_id" SERIAL PRIMARY KEY,
+                                                "user_email" VARCHAR NOT NULL REFERENCES "Account"("email") ON DELETE CASCADE,
+                                                "course_id" INTEGER NOT NULL REFERENCES "Course"("course_id") ON DELETE CASCADE,
+                                                "is_completed" BOOLEAN DEFAULT FALSE,
+                                                "completed_at" TIMESTAMP,
+                                                UNIQUE("user_email", "course_id")
+);
+
 INSERT INTO "Organization" ("name") VALUES
                                         ('ООО Альфа'),
                                         ('ЗАО Омега');
@@ -242,4 +260,5 @@ DROP TABLE IF EXISTS "Competency";
 DROP TABLE IF EXISTS "MaterialType";
 DROP TABLE IF EXISTS "Account";
 DROP TABLE IF EXISTS "Role";
+DROP TABLE IF EXISTS "CourseProgress";
 DROP TABLE IF EXISTS "goose_db_version";

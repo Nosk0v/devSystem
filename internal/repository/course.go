@@ -56,7 +56,8 @@ func (r *CourseRepository) GetCourseByID(id int) (models.CourseResponse, error) 
 	query := `
 		SELECT c.course_id, c.title, c.description, c.created_by, c.create_date, c.organization_id,
 		       array_agg(DISTINCT m.title) AS materials,
-		       array_agg(DISTINCT comp.name) AS competencies
+		       array_agg(DISTINCT comp.name) AS competencies,
+		       array_agg(DISTINCT m.material_id) AS material_ids
 		FROM "Course" c
 		LEFT JOIN "CourseMaterial" cm ON c.course_id = cm.course_id
 		LEFT JOIN "Material" m ON cm.material_id = m.material_id
@@ -77,7 +78,8 @@ func (r *CourseRepository) GetAllCourses() ([]models.CourseResponse, error) {
 	query := `
 		SELECT c.course_id, c.title, c.description, c.created_by, c.create_date, c.organization_id,
 		       array_agg(DISTINCT m.title) AS materials,
-		       array_agg(DISTINCT comp.name) AS competencies
+		       array_agg(DISTINCT comp.name) AS competencies,
+		       array_agg(DISTINCT m.material_id) AS material_ids
 		FROM "Course" c
 		LEFT JOIN "CourseMaterial" cm ON c.course_id = cm.course_id
 		LEFT JOIN "Material" m ON cm.material_id = m.material_id
@@ -97,7 +99,8 @@ func (r *CourseRepository) GetCoursesByOrganization(orgID int) ([]models.CourseR
 	query := `
 		SELECT c.course_id, c.title, c.description, c.created_by, c.create_date, c.organization_id,
 		       array_agg(DISTINCT m.title) AS materials,
-		       array_agg(DISTINCT comp.name) AS competencies
+		       array_agg(DISTINCT comp.name) AS competencies,
+		       array_agg(DISTINCT m.material_id) AS material_ids
 		FROM "Course" c
 		LEFT JOIN "CourseMaterial" cm ON c.course_id = cm.course_id
 		LEFT JOIN "Material" m ON cm.material_id = m.material_id
@@ -172,4 +175,62 @@ func (r *CourseRepository) DeleteCourse(id int) error {
 		return fmt.Errorf("error deleting course: %w", err)
 	}
 	return nil
+}
+
+// GetUserCourseProgress returns the IDs of materials that the user has completed (viewed) in the given course.
+func (r *CourseRepository) GetUserCourseProgress(userEmail string, courseID int) ([]int, error) {
+	var materialIDs []int
+	query := `
+        SELECT material_id FROM "MaterialProgress"
+        WHERE user_email = $1 AND course_id = $2 AND is_viewed = TRUE
+    `
+	err := r.db.Select(&materialIDs, query, userEmail, courseID)
+	if err != nil {
+		return nil, fmt.Errorf("error getting course progress: %w", err)
+	}
+	return materialIDs, nil
+}
+
+// MarkMaterialAsCompleted marks a material as viewed for a user in a course.
+func (r *CourseRepository) MarkMaterialAsCompleted(userEmail string, courseID int, materialID int) error {
+	query := `
+        INSERT INTO "MaterialProgress" (user_email, course_id, material_id, is_viewed, viewed_at)
+        VALUES ($1, $2, $3, TRUE, now())
+        ON CONFLICT (user_email, course_id, material_id) DO NOTHING
+    `
+	_, err := r.db.Exec(query, userEmail, courseID, materialID)
+	if err != nil {
+		return fmt.Errorf("error marking material as viewed: %w", err)
+	}
+	return nil
+}
+
+// CompleteCourse marks the course as completed for a user.
+func (r *CourseRepository) CompleteCourse(userEmail string, courseID int) error {
+	query := `
+        INSERT INTO "CourseProgress" (user_email, course_id, is_completed, completed_at)
+        VALUES ($1, $2, TRUE, now())
+        ON CONFLICT (user_email, course_id)
+        DO UPDATE SET is_completed = TRUE, completed_at = now()
+    `
+	_, err := r.db.Exec(query, userEmail, courseID)
+	if err != nil {
+		return fmt.Errorf("error completing course: %w", err)
+	}
+	return nil
+}
+func (r *CourseRepository) IsCourseCompleted(userEmail string, courseID int) (bool, error) {
+	var isCompleted bool
+	query := `
+	  SELECT is_completed FROM "CourseProgress"
+	  WHERE user_email = $1 AND course_id = $2
+	`
+	err := r.db.Get(&isCompleted, query, userEmail, courseID)
+	if err != nil {
+		if err.Error() == "sql: no rows in result set" {
+			return false, nil
+		}
+		return false, fmt.Errorf("error checking course completion: %w", err)
+	}
+	return isCompleted, nil
 }

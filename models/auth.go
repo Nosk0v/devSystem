@@ -19,7 +19,7 @@ type SignUpInput struct {
 	Password       string  `json:"password" validate:"required,min=8,max=32"`
 	Name           *string `json:"name"`
 	Role           int
-	OrganizationID *int `json:"organization"`
+	OrganizationID int `json:"organization"`
 }
 
 type SignUpOutput struct {

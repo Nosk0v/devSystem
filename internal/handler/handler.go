@@ -64,11 +64,20 @@ func (h *Handler) InitRoutes() *gin.Engine {
 	}
 	courses := api.Group("/courses")
 	{
-		courses.GET("/:id", h.getCourse)
 		courses.GET("", h.getAllCourses)
 		courses.POST("", h.createCourse)
-		courses.PUT("/:id", h.updateCourse)
-		courses.DELETE("/:id", h.deleteCourse)
+
+		course := courses.Group("/:course_id")
+		{
+			course.GET("", h.getCourse)
+			course.PUT("", h.updateCourse)
+			course.DELETE("", h.deleteCourse)
+
+			course.POST("/complete", h.completeCourse)
+			course.GET("/progress", h.getCourseProgress)
+			course.GET("/completed", h.isCourseCompleted)
+			course.POST("/materials/:material_id/complete", h.markMaterialAsCompleted)
+		}
 	}
 
 	return router

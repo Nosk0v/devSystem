@@ -29,6 +29,14 @@ func (s *CourseService) LinkCourseWithMaterials(courseID int, materialIDs []int)
 	return nil
 }
 
+func (s *CourseService) IsCourseCompleted(userEmail string, courseID int) (bool, error) {
+	isCompleted, err := s.repo.IsCourseCompleted(userEmail, courseID)
+	if err != nil {
+		return false, fmt.Errorf("error checking if course is completed: %w", err)
+	}
+	return isCompleted, nil
+}
+
 func (s *CourseService) LinkCourseWithCompetencies(courseID int, competencyIDs []int) error {
 	if err := s.repo.LinkCourseWithCompetencies(courseID, competencyIDs); err != nil {
 		return fmt.Errorf("error linking course with competencies: %w", err)
@@ -70,6 +78,28 @@ func (s *CourseService) UpdateCourse(course models.Course) error {
 func (s *CourseService) DeleteCourse(id int) error {
 	if err := s.repo.DeleteCourse(id); err != nil {
 		return fmt.Errorf("error deleting course: %w", err)
+	}
+	return nil
+}
+
+func (s *CourseService) GetUserCourseProgress(userEmail string, courseID int) ([]int, error) {
+	progress, err := s.repo.GetUserCourseProgress(userEmail, courseID)
+	if err != nil {
+		return nil, fmt.Errorf("error getting user course progress: %w", err)
+	}
+	return progress, nil
+}
+
+func (s *CourseService) MarkMaterialAsCompleted(userEmail string, courseID int, materialID int) error {
+	if err := s.repo.MarkMaterialAsCompleted(userEmail, courseID, materialID); err != nil {
+		return fmt.Errorf("error marking material as completed: %w", err)
+	}
+	return nil
+}
+
+func (s *CourseService) CompleteCourse(userEmail string, courseID int) error {
+	if err := s.repo.CompleteCourse(userEmail, courseID); err != nil {
+		return fmt.Errorf("error marking course as completed: %w", err)
 	}
 	return nil
 }

@@ -99,8 +99,6 @@ func (u *Usecase) DeleteCourse(id int) error {
 	return nil
 }
 
-// --- Приватные методы --- //
-
 func (u *Usecase) getAllCourses() ([]models.CourseResponse, error) {
 	log.Printf("Fetching all courses (superadmin only)")
 	courses, err := u.services.Course.GetAllCourses()
@@ -117,4 +115,34 @@ func (u *Usecase) getCoursesByOrganization(orgID int) ([]models.CourseResponse, 
 		return nil, fmt.Errorf("error fetching courses by organization: %w", err)
 	}
 	return courses, nil
+}
+
+// Progress-related methods
+func (u *Usecase) IsCourseCompleted(userEmail string, courseID int) (bool, error) {
+	completed, err := u.services.Course.IsCourseCompleted(userEmail, courseID)
+	if err != nil {
+		return false, fmt.Errorf("error checking if course is completed: %w", err)
+	}
+	return completed, nil
+}
+func (u *Usecase) GetUserCourseProgress(userEmail string, courseID int) ([]int, error) {
+	progress, err := u.services.Course.GetUserCourseProgress(userEmail, courseID)
+	if err != nil {
+		return nil, fmt.Errorf("error getting user course progress: %w", err)
+	}
+	return progress, nil
+}
+
+func (u *Usecase) MarkMaterialAsCompleted(userEmail string, courseID int, materialID int) error {
+	if err := u.services.Course.MarkMaterialAsCompleted(userEmail, courseID, materialID); err != nil {
+		return fmt.Errorf("error marking material as completed: %w", err)
+	}
+	return nil
+}
+
+func (u *Usecase) CompleteCourse(userEmail string, courseID int) error {
+	if err := u.services.Course.CompleteCourse(userEmail, courseID); err != nil {
+		return fmt.Errorf("error marking course as completed: %w", err)
+	}
+	return nil
 }
