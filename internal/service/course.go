@@ -103,3 +103,11 @@ func (s *CourseService) CompleteCourse(userEmail string, courseID int) error {
 	}
 	return nil
 }
+
+func (s *CourseService) GetCompletedCourses(userEmail string) ([]models.CourseResponse, error) {
+	courses, err := s.repo.GetCompletedCourses(userEmail)
+	if err != nil {
+		return nil, fmt.Errorf("error getting completed courses: %w", err)
+	}
+	return courses, nil
+}

@@ -374,3 +374,29 @@ func (h *Handler) isCourseCompleted(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"completed": isCompleted})
 }
+
+// GetCompletedCourses godoc
+// @Summary Получить завершённые курсы
+// @Description Возвращает список завершённых курсов для текущего пользователя
+// @Tags courses
+// @Accept json
+// @Produce json
+// @Success 200 {array} models.CourseResponse
+// @Failure 401 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /courses/completed [get]
+func (h *Handler) getCompletedCourses(c *gin.Context) {
+	claims, err := h.GetJWTClaims(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, ErrorResponse{Error: "Unauthorized"})
+		return
+	}
+
+	courses, err := h.usecases.GetCompletedCourses(claims.Email)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: "Failed to fetch completed courses"})
+		return
+	}
+
+	c.JSON(http.StatusOK, courses)
+}

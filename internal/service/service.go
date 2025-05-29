@@ -55,6 +55,7 @@ type Course interface {
 	MarkMaterialAsCompleted(userEmail string, courseID int, materialID int) error
 	CompleteCourse(userEmail string, courseID int) error
 	IsCourseCompleted(userEmail string, courseID int) (bool, error)
+	GetCompletedCourses(userEmail string) ([]models.CourseResponse, error)
 }
 
 type Service struct {

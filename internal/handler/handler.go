@@ -66,6 +66,7 @@ func (h *Handler) InitRoutes() *gin.Engine {
 	{
 		courses.GET("", h.getAllCourses)
 		courses.POST("", h.createCourse)
+		courses.GET("/completed", h.getCompletedCourses)
 
 		course := courses.Group("/:course_id")
 		{

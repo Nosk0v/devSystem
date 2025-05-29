@@ -117,10 +117,21 @@ func (r *CourseRepository) GetCoursesByOrganization(orgID int) ([]models.CourseR
 }
 
 func (r *CourseRepository) UpdateCourse(course models.Course) error {
-	tx, err := r.db.Begin()
+	tx, err := r.db.Beginx() // ← важно: BeginX, чтобы использовать tx.Select
 	if err != nil {
 		return fmt.Errorf("failed to start transaction: %w", err)
 	}
+
+	var existingMaterialIDs []int
+	err = tx.Select(&existingMaterialIDs, `
+		SELECT material_id FROM "CourseMaterial" WHERE course_id = $1
+	`, course.CourseID)
+	if err != nil {
+		tx.Rollback()
+		return fmt.Errorf("failed to fetch existing materials: %w", err)
+	}
+
+	materialsChanged := !equalIntSlices(existingMaterialIDs, course.Materials)
 
 	query := `
 		UPDATE "Course"
@@ -159,8 +170,18 @@ func (r *CourseRepository) UpdateCourse(course models.Course) error {
 		}
 	}
 
-	err = tx.Commit()
-	if err != nil {
+	if materialsChanged {
+		_, err := tx.Exec(`
+			DELETE FROM "CourseProgress"
+			WHERE course_id = $1 AND is_completed = TRUE
+		`, course.CourseID)
+		if err != nil {
+			tx.Rollback()
+			return fmt.Errorf("failed to delete completed progress: %w", err)
+		}
+	}
+
+	if err = tx.Commit(); err != nil {
 		tx.Rollback()
 		return fmt.Errorf("failed to commit course update: %w", err)
 	}
@@ -233,4 +254,51 @@ func (r *CourseRepository) IsCourseCompleted(userEmail string, courseID int) (bo
 		return false, fmt.Errorf("error checking course completion: %w", err)
 	}
 	return isCompleted, nil
+}
+
+// GetCompletedCourses retrieves the list of completed courses for a user.
+func (r *CourseRepository) GetCompletedCourses(userEmail string) ([]models.CourseResponse, error) {
+	var courses []models.CourseResponse
+	query := `
+        SELECT c.course_id, c.title, c.description, c.created_by, c.create_date, c.organization_id,
+               array_agg(DISTINCT m.title) AS materials,
+               array_agg(DISTINCT comp.name) AS competencies,
+               array_agg(DISTINCT m.material_id) AS material_ids
+        FROM "CourseProgress" cp
+        JOIN "Course" c ON cp.course_id = c.course_id
+        LEFT JOIN "CourseMaterial" cm ON c.course_id = cm.course_id
+        LEFT JOIN "Material" m ON cm.material_id = m.material_id
+        LEFT JOIN "CourseCompetency" cc ON c.course_id = cc.course_id
+        LEFT JOIN "Competency" comp ON cc.competency_id = comp.competency_id
+        WHERE cp.user_email = $1 AND cp.is_completed = TRUE
+        GROUP BY c.course_id
+    `
+	err := r.db.Select(&courses, query, userEmail)
+	if err != nil {
+		return nil, fmt.Errorf("error fetching completed courses: %w", err)
+	}
+	return courses, nil
+}
+
+func equalIntSlices(a, b []int) bool {
+	if len(a) != len(b) {
+		return false
+	}
+
+	counter := make(map[int]int)
+	for _, v := range a {
+		counter[v]++
+	}
+	for _, v := range b {
+		if counter[v] == 0 {
+			return false
+		}
+		counter[v]--
+	}
+	for _, count := range counter {
+		if count != 0 {
+			return false
+		}
+	}
+	return true
 }

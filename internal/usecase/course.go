@@ -146,3 +146,11 @@ func (u *Usecase) CompleteCourse(userEmail string, courseID int) error {
 	}
 	return nil
 }
+
+func (u *Usecase) GetCompletedCourses(userEmail string) ([]models.CourseResponse, error) {
+	courses, err := u.services.Course.GetCompletedCourses(userEmail)
+	if err != nil {
+		return nil, fmt.Errorf("error fetching completed courses: %w", err)
+	}
+	return courses, nil
+}
