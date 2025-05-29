@@ -4,7 +4,7 @@
     "jwt_secret_key": "secret"
   },
   "development-system-database": {
-    "db_host": "localhost",
+    "db_host": "postgres",
     "db_port": "5432",
     "db_username": "postgres",
     "db_password": "1234",
