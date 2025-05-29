@@ -100,7 +100,86 @@ func (h *Handler) signUp(c *gin.Context) {
 		h.sendResponseSuccess(c, models.SignUpOutput{Message: "Регистрация прошла успешно"}, processStatus)
 	case usecase.ResourceAlreadyExist:
 		h.sendResponseSuccess(c, nil, processStatus)
+	case usecase.CodeNotFound:
+		h.sendResponseSuccess(c, nil, processStatus)
 	default:
 		h.sendResponseSuccess(c, nil, usecase.InternalServerError)
 	}
+}
+
+// GetOrganizations godoc
+// @Summary Получить список организаций
+// @Description Возвращает все доступные организации
+// @Tags auth
+// @Produce json
+// @Success 200 {array} models.Organization
+// @Failure 500 {object} ErrorResponse
+// @Router /auth/organizations [get]
+func (h *Handler) getOrganizations(c *gin.Context) {
+	orgs, err := h.usecases.GetOrganizations()
+	if err != nil {
+		logrus.WithError(err).Error("Ошибка при получении организаций")
+		h.sendResponseSuccess(c, nil, usecase.InternalServerError)
+		return
+	}
+	h.sendResponseSuccess(c, orgs, usecase.Success)
+}
+
+// CreateRegistrationCode godoc
+// @Summary Создание регистрационного кода
+// @Description Генерация одноразового кода для регистрации
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param input body struct{ Prefix string `json:"prefix"`; IsAdmin bool `json:"is_admin"` } true "Параметры создания кода"
+// @Success 200 {object} struct{ Code string `json:"code"` }
+// @Failure 400 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /auth/registration-code [post]
+func (h *Handler) createRegistrationCode(c *gin.Context) {
+	var input struct {
+		OrganizationID int  `json:"organization_id"`
+		IsAdmin        bool `json:"is_admin"`
+	}
+
+	if err := c.ShouldBindJSON(&input); err != nil {
+		logrus.WithError(err).Warn("Неверный JSON при создании регистрационного кода")
+		h.sendResponseSuccess(c, nil, usecase.BadRequest)
+		return
+	}
+
+	code, err := h.usecases.CreateRegistrationCode(input.OrganizationID, input.IsAdmin)
+	if err != nil {
+		logrus.WithError(err).Error("Ошибка при создании регистрационного кода")
+		h.sendResponseSuccess(c, nil, usecase.InternalServerError)
+		return
+	}
+
+	h.sendResponseSuccess(c, gin.H{"code": code}, usecase.Success)
+}
+
+// DeleteRegistrationCode godoc
+// @Summary Удалить регистрационный код
+// @Description Удаление регистрационного кода по строковому ID
+// @Tags auth
+// @Param code path string true "Регистрационный код"
+// @Success 200
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /auth/registration-code/{code} [delete]
+func (h *Handler) deleteRegistrationCode(c *gin.Context) {
+	code := c.Param("code")
+	if code == "" {
+		h.sendResponseSuccess(c, nil, usecase.BadRequest)
+		return
+	}
+
+	err := h.usecases.DeleteRegistrationCode(code)
+	if err != nil {
+		logrus.WithError(err).Error("Ошибка при удалении регистрационного кода")
+		h.sendResponseSuccess(c, nil, usecase.InternalServerError)
+		return
+	}
+
+	h.sendResponseSuccess(c, gin.H{"message": "Код удалён"}, usecase.Success)
 }

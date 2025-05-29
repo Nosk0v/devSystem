@@ -49,6 +49,12 @@ type CourseRepositoryInterface interface {
 type Auth interface {
 	CreateAccount(input *models.SignUpInput) error
 	AccountExists(email string) (bool, error)
+	GetOrganizations() ([]models.Organization, error)
+	DeleteRegistrationCode(code string) error
+	GetRegistrationCodeInfo(code string) (*models.RegistrationCode, error)
+	CreateRegistrationCode(prefix string, isAdmin bool) (string, error)
+	MarkRegistrationCodeAsUsed(code string) error
+	GetPrefixByOrgID(orgID int) (string, error)
 }
 
 type Account interface {

@@ -21,8 +21,9 @@ var responseGroups = map[int16][]ErrorCode{
 	409: {Conflict},
 	432: {BadHeader},
 	433: {ResourceAlreadyExist},
-	434: {ResourceInTrash},
 	500: {InternalServerError},
+	435: {CodeNotFound},
+	434: {CodeAlreadyUsed},
 }
 
 var ErrorCodeToFailedResponse = ConvertResponseGroups(responseGroups)

@@ -96,6 +96,21 @@ CREATE TABLE IF NOT EXISTS "CourseProgress" (
                                                 UNIQUE("user_email", "course_id")
 );
 
+CREATE TABLE "RegistrationPrefix" (
+                                      prefix TEXT PRIMARY KEY,                     -- напр. "MTI", "SBER"
+                                      organization_id INT REFERENCES "Organization"(organization_id),
+                                      created_at TIMESTAMP DEFAULT now()
+);
+
+CREATE TABLE "InviteCode" (
+                              code TEXT PRIMARY KEY,                        -- напр. "MTI-XYZ123"
+                              prefix TEXT REFERENCES "RegistrationPrefix"(prefix),
+                              role INT NOT NULL DEFAULT 1,                  -- 1=user, 2=admin
+                              used BOOLEAN NOT NULL DEFAULT FALSE,
+                              expires_at TIMESTAMP,                         -- NULL = бессрочный
+                              created_at TIMESTAMP DEFAULT now()
+);
+
 INSERT INTO "Organization" ("name") VALUES
                                         ('ООО Альфа'),
                                         ('ЗАО Омега');
@@ -106,6 +121,11 @@ VALUES
     ('Статья'),
     ('Книга'),
     ('Видео');
+
+INSERT INTO "RegistrationPrefix" ("prefix", "organization_id")
+VALUES
+    ('ALFA', 1),  -- ООО Альфа
+    ('OMEGA', 2); -- ЗАО Омега
 
 INSERT INTO "Material" ("title", "description", "type", "content") VALUES
                                                                        ('Введение в разработку ПО', 'Основы подходов к разработке программ', 2, 'Содержимое книги о разработке'),

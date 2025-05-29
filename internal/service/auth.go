@@ -49,3 +49,26 @@ func (a *AuthService) SignUp(input *models.SignUpInput) error {
 
 	return nil
 }
+
+func (s *AuthService) MarkRegistrationCodeAsUsed(code string) error {
+	return s.repo.MarkRegistrationCodeAsUsed(code)
+}
+func (a *AuthService) GetOrganizations() ([]models.Organization, error) {
+	return a.repo.GetOrganizations()
+}
+
+func (a *AuthService) DeleteRegistrationCode(code string) error {
+	return a.repo.DeleteRegistrationCode(code)
+}
+
+func (a *AuthService) GetRegistrationCodeInfo(code string) (*models.RegistrationCode, error) {
+	return a.repo.GetRegistrationCodeInfo(code)
+}
+
+func (a *AuthService) CreateRegistrationCode(prefix string, isAdmin bool) (string, error) {
+	return a.repo.CreateRegistrationCode(prefix, isAdmin)
+}
+
+func (a *AuthService) GetPrefixByOrgID(orgID int) (string, error) {
+	return a.repo.GetPrefixByOrgID(orgID)
+}

@@ -4,6 +4,7 @@ import (
 	"devSystem/models"
 	"github.com/sirupsen/logrus"
 	"strings"
+	"time"
 )
 
 func (u *Usecase) SignIn(input *models.SignInInput) (*models.SignInOutput, ErrorCode) {
@@ -49,16 +50,53 @@ func (u *Usecase) ParseToken(token string) (*models.JWTClaims, ErrorCode) {
 	return claims, Success
 }
 func (u *Usecase) SignUp(input *models.SignUpInput) ErrorCode {
-	input.Role = 1
-	input.OrganizationID = 2
-	err := u.services.Auth.SignUp(input)
+	// Получить информацию по коду
+	codeInfo, err := u.services.Auth.GetRegistrationCodeInfo(input.Code)
+	if err != nil {
+		logrus.Error("не удалось получить информацию по коду: ", err)
+		return CodeNotFound
+	}
+
+	if codeInfo.IsUsed {
+		logrus.Warn("код уже использован")
+		return CodeAlreadyUsed
+	}
+
+	if codeInfo.ExpiresAt != nil && codeInfo.ExpiresAt.Before(time.Now()) {
+		logrus.Warn("срок действия кода истёк")
+		return ResourceExpired
+	}
+
+	if codeInfo.Code == "" || codeInfo.OrganizationID == 0 {
+		logrus.Warn("Регистрационный код невалиден или не содержит организацию")
+		return CodeNotFound
+	}
+
+	// Заполняем роль и организацию на основе кода
+	if codeInfo.Role == 0 {
+		input.Role = 0 // админ
+	} else {
+		input.Role = 1 // обычный
+	}
+	input.OrganizationID = codeInfo.OrganizationID
+
+	// Регистрируем
+	err = u.services.Auth.SignUp(input)
 	if err != nil {
 		if strings.Contains(err.Error(), "уже зарегистрирован") {
 			return ResourceAlreadyExist
 		}
-		logrus.Error("Ошибка в сервисе при создании аккаунта: ", err)
+		logrus.Error("Ошибка при создании аккаунта: ", err)
 		return InternalServerError
 	}
+
+	// Помечаем код как использованный
+	err = u.services.Auth.MarkRegistrationCodeAsUsed(input.Code)
+	if err != nil {
+		logrus.Warn("Не удалось пометить код как использованный: ", err)
+		// Не критично, регистрацию не прерываем
+	}
+
 	return ResourceCreated
 }
 
@@ -73,4 +111,32 @@ func (u *Usecase) Refresh(refreshToken string) (*models.AccessTokenOutput, Error
 	}
 
 	return output, Success
+}
+
+func (u *Usecase) GetOrganizations() ([]models.Organization, error) {
+	return u.services.Auth.GetOrganizations()
+}
+
+func (u *Usecase) DeleteRegistrationCode(code string) error {
+	return u.services.Auth.DeleteRegistrationCode(code)
+}
+
+func (u *Usecase) GetRegistrationCodeInfo(code string) (*models.RegistrationCode, error) {
+	return u.services.Auth.GetRegistrationCodeInfo(code)
+}
+
+func (u *Usecase) CreateRegistrationCode(orgID int, isAdmin bool) (string, error) {
+	prefix, err := u.services.Auth.GetPrefixByOrgID(orgID)
+	if err != nil {
+		logrus.WithError(err).Error("не удалось получить префикс по организации")
+		return "", err
+	}
+
+	code, err := u.services.Auth.CreateRegistrationCode(prefix, isAdmin)
+	if err != nil {
+		logrus.WithError(err).Error("не удалось создать код регистрации")
+		return "", err
+	}
+
+	return code, nil
 }

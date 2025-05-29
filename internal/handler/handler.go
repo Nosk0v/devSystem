@@ -46,6 +46,13 @@ func (h *Handler) InitRoutes() *gin.Engine {
 		materials.DELETE("/:id", h.deleteMaterial)
 	}
 
+	registration := api.Group("/registration", h.UserIdentityMiddleware)
+	{
+		registration.GET("/organizations", h.getOrganizations)
+		registration.POST("/code", h.createRegistrationCode)
+		registration.DELETE("/code/:code", h.deleteRegistrationCode)
+	}
+
 	materialsType := api.Group("/materialsType")
 	{
 		materialsType.GET("/:id", h.getMaterialType)

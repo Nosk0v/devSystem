@@ -33,6 +33,12 @@ type Account interface {
 type Auth interface {
 	SignIn(input *models.SignInInput, accountPassword string) error
 	SignUp(input *models.SignUpInput) error
+	GetOrganizations() ([]models.Organization, error)
+	DeleteRegistrationCode(code string) error
+	GetRegistrationCodeInfo(code string) (*models.RegistrationCode, error)
+	CreateRegistrationCode(prefix string, isAdmin bool) (string, error)
+	MarkRegistrationCodeAsUsed(code string) error
+	GetPrefixByOrgID(orgID int) (string, error)
 }
 
 type JWTToken interface {

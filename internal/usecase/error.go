@@ -21,6 +21,9 @@ const (
 	ConfirmCodeNotMatched
 	AccountMustConfirmed
 	NotFound
+	ResourceExpired
+	CodeAlreadyUsed
+	CodeNotFound
 	ResourceInTrash
 )
 
@@ -49,6 +52,9 @@ func (e ErrorCode) String() string {
 		"accountMustBeConfirmedBefore",
 		"notFound",
 		"resourceInTrash",
+		"resourceExpired",
+		"codeAlreadyUsed",
+		"codeNotFound",
 	}[e]
 }
 
@@ -73,6 +79,9 @@ func (e ErrorCode) Message() interface{} {
 		"accountMustBeConfirmedBefore",
 		"notFound",
 		"resourceInTrash",
+		"resourceExpired",
+		"codeAlreadyUsed",
+		"codeNotFound",
 	}[e]
 }
 
@@ -97,6 +106,9 @@ func (e ErrorCode) CustomMessage(text string) interface{} {
 		"accountMustBeConfirmedBefore",
 		"notFound",
 		"resourceInTrash",
+		"resourceExpired",
+		"codeAlreadyUsed",
+		"codeNotFound",
 	}[e]
 
 	return fmt.Sprintf(`%s: %s`, baseMessage, text)
