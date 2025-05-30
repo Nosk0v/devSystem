@@ -314,7 +314,7 @@ func (h *Handler) markMaterialAsCompleted(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path int true "ID курса"
-// @Success 200 {object} gin.H{"completed_materials": []int}
+// @Success 200 {object} models.CourseProgressResponse
 // @Failure 400 {object} ErrorResponse
 // @Failure 401 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse
@@ -338,7 +338,7 @@ func (h *Handler) getCourseProgress(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"completed_materials": progress})
+	c.JSON(http.StatusOK, models.CourseProgressResponse{CompletedMaterials: progress})
 }
 
 // IsCourseCompleted godoc
@@ -348,7 +348,7 @@ func (h *Handler) getCourseProgress(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path int true "ID курса"
-// @Success 200 {object} gin.H{"completed": bool}
+// @Success 200 {object} models.CourseProgressResponse
 // @Failure 400 {object} ErrorResponse
 // @Failure 401 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse

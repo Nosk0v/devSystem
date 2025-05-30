@@ -203,7 +203,6 @@ VALUES
 -- Аккаунты
 INSERT INTO "Account" ("email", "password", "name", "role", "organization_id") VALUES
                                                                                    ('1234@mail.ru', '$2a$10$hitarfnbzlubZuZtQKITq.6zoul4yywj1f6Sn0dl.N41uuRwGhXKm', 'Иванов Иван Иванович', 0, 1),
-                                                                                   ('2org@mail.ru', '$2a$10$hitarfnbzlubZuZtQKITq.6zoul4yywj1f6Sn0dl.N41uuRwGhXKm', 'Иванов Иван Иванович', 0, 2),
                                                                                    ('5678@mail.ru', '$2a$10$hitarfnbzlubZuZtQKITq.6zoul4yywj1f6Sn0dl.N41uuRwGhXKm', 'Петров Петр Петрович', 1, 2),
                                                                                    ('root@system.dev', '$2a$10$hitarfnbzlubZuZtQKITq.6zoul4yywj1f6Sn0dl.N41uuRwGhXKm', 'Суперадмин', 2, NULL);
 

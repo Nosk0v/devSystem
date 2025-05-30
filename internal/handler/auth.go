@@ -131,16 +131,13 @@ func (h *Handler) getOrganizations(c *gin.Context) {
 // @Tags auth
 // @Accept json
 // @Produce json
-// @Param input body struct{ Prefix string `json:"prefix"`; IsAdmin bool `json:"is_admin"` } true "Параметры создания кода"
-// @Success 200 {object} struct{ Code string `json:"code"` }
+// @Param input body models.CreateRegistrationCodeInput true "Параметры создания кода"
+// @Success 200 {object} models.RegistrationCodeOutput
 // @Failure 400 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse
 // @Router /auth/registration-code [post]
 func (h *Handler) createRegistrationCode(c *gin.Context) {
-	var input struct {
-		OrganizationID int  `json:"organization_id"`
-		IsAdmin        bool `json:"is_admin"`
-	}
+	var input models.CreateRegistrationCodeInput
 
 	if err := c.ShouldBindJSON(&input); err != nil {
 		logrus.WithError(err).Warn("Неверный JSON при создании регистрационного кода")
@@ -155,7 +152,7 @@ func (h *Handler) createRegistrationCode(c *gin.Context) {
 		return
 	}
 
-	h.sendResponseSuccess(c, gin.H{"code": code}, usecase.Success)
+	h.sendResponseSuccess(c, models.RegistrationCodeOutput{Code: code}, usecase.Success)
 }
 
 // DeleteRegistrationCode godoc

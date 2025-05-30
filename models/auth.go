@@ -53,3 +53,12 @@ type SignUpWithCodeInput struct {
 type SignUpOutput struct {
 	Message string `json:"message"`
 }
+
+type CreateRegistrationCodeInput struct {
+	OrganizationID int  `json:"organization_id"`
+	IsAdmin        bool `json:"is_admin"`
+}
+
+type RegistrationCodeOutput struct {
+	Code string `json:"code"`
+}

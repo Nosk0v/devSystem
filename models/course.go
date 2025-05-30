@@ -31,7 +31,7 @@ type CourseResponse struct {
 	Description    string         `db:"description" json:"description" example:"Курс по Go для начинающих"`
 	CreatedBy      string         `db:"created_by" json:"created_by" example:"admin@test.ru"`
 	Materials      pq.StringArray `db:"materials" json:"materials" swaggertype:"array,string" example:"[\"Материал 1\", \"Материал 2\"]"`
-	MaterialIDs    pq.Int64Array  `db:"material_ids" json:"material_ids"`
+	MaterialIDs    pq.Int64Array  `db:"material_ids" json:"material_ids" swaggertype:"array,integer"`
 	Competencies   pq.StringArray `db:"competencies" json:"competencies" swaggertype:"array,string" example:"[\"Go Basics\", \"Concurrency\"]"`
 	CreateDate     time.Time      `db:"create_date" json:"create_date" example:"2024-11-28T15:04:05Z"`
 	OrganizationID int            `db:"organization_id" json:"organization_id"`
@@ -60,4 +60,8 @@ type CourseProgress struct {
 	CourseID    int       `db:"course_id" json:"course_id"`
 	IsCompleted bool      `db:"is_completed" json:"is_completed"`
 	CompletedAt time.Time `db:"completed_at" json:"completed_at"`
+}
+
+type CourseProgressResponse struct {
+	CompletedMaterials []int `json:"completed_materials" swaggertype:"array,integer"`
 }
