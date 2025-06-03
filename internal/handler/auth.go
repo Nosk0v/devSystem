@@ -5,6 +5,7 @@ import (
 	"devSystem/models"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
+	"strconv"
 )
 
 // SignIn godoc
@@ -34,6 +35,34 @@ func (h *Handler) signIn(c *gin.Context) {
 	}
 
 	h.sendResponseSuccess(c, output, processStatus)
+}
+
+// DeleteOrganization godoc
+// @Summary Удаление организации
+// @Description Удаляет организацию и все связанные с ней записи
+// @Tags auth
+// @Param id path int true "ID организации"
+// @Success 200 {object} gin.H
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /auth/organization/{id} [delete]
+func (h *Handler) deleteOrganization(c *gin.Context) {
+	idParam := c.Param("id")
+	id, err := strconv.Atoi(idParam)
+	if err != nil {
+		h.sendResponseSuccess(c, nil, usecase.BadRequest)
+		return
+	}
+
+	err = h.usecases.DeleteOrganization(id)
+	if err != nil {
+		logrus.WithError(err).Error("Ошибка при удалении организации")
+		h.sendResponseSuccess(c, nil, usecase.InternalServerError)
+		return
+	}
+
+	h.sendResponseSuccess(c, gin.H{"message": "Организация удалена"}, usecase.Success)
 }
 
 // Refresh godoc

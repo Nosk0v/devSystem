@@ -76,3 +76,7 @@ func (a *AuthService) CreateRegistrationCode(prefix string, isAdmin bool) (strin
 func (a *AuthService) GetPrefixByOrgID(orgID int) (string, error) {
 	return a.repo.GetPrefixByOrgID(orgID)
 }
+
+func (a *AuthService) DeleteOrganization(orgID int) error {
+	return a.repo.DeleteOrganization(orgID)
+}

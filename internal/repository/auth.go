@@ -160,3 +160,33 @@ func (r *AuthPostgres) CreateOrganizationWithPrefix(name, prefix string) error {
 
 	return tx.Commit()
 }
+
+func (r *AuthPostgres) DeleteOrganization(orgID int) error {
+	tx, err := r.db.Beginx()
+	if err != nil {
+		return fmt.Errorf("failed to begin transaction: %w", err)
+	}
+
+	// Удалить префиксы регистрации
+	_, err = tx.Exec(`DELETE FROM "RegistrationPrefix" WHERE organization_id = $1`, orgID)
+	if err != nil {
+		tx.Rollback()
+		return fmt.Errorf("failed to delete registration prefixes: %w", err)
+	}
+
+	// Удалить аккаунты (ON DELETE CASCADE из Organization уже сработает, но продублируем для ясности)
+	_, err = tx.Exec(`DELETE FROM "Account" WHERE organization_id = $1`, orgID)
+	if err != nil {
+		tx.Rollback()
+		return fmt.Errorf("failed to delete accounts: %w", err)
+	}
+
+	// Удалить организацию
+	_, err = tx.Exec(`DELETE FROM "Organization" WHERE organization_id = $1`, orgID)
+	if err != nil {
+		tx.Rollback()
+		return fmt.Errorf("failed to delete organization: %w", err)
+	}
+
+	return tx.Commit()
+}

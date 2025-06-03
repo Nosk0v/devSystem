@@ -40,6 +40,7 @@ type Auth interface {
 	MarkRegistrationCodeAsUsed(code string) error
 	GetPrefixByOrgID(orgID int) (string, error)
 	CreateOrganizationWithPrefix(name string, prefix string) error
+	DeleteOrganization(orgID int) error
 }
 
 type JWTToken interface {

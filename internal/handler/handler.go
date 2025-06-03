@@ -52,6 +52,7 @@ func (h *Handler) InitRoutes() *gin.Engine {
 		registration.POST("/code", h.createRegistrationCode)
 		registration.DELETE("/code/:code", h.deleteRegistrationCode)
 		registration.POST("/organization", h.createOrganization)
+		registration.DELETE("/organization/:id", h.deleteOrganization)
 	}
 
 	materialsType := api.Group("/materialsType")

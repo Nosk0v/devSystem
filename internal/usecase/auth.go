@@ -144,3 +144,7 @@ func (u *Usecase) CreateRegistrationCode(orgID int, isAdmin bool) (string, error
 func (u *Usecase) CreateOrganizationWithPrefix(input models.CreateOrganizationInput) error {
 	return u.services.Auth.CreateOrganizationWithPrefix(input.Name, input.Prefix)
 }
+
+func (u *Usecase) DeleteOrganization(organizationID int) error {
+	return u.services.Auth.DeleteOrganization(organizationID)
+}
