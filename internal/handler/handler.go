@@ -51,6 +51,7 @@ func (h *Handler) InitRoutes() *gin.Engine {
 		registration.GET("/organizations", h.getOrganizations)
 		registration.POST("/code", h.createRegistrationCode)
 		registration.DELETE("/code/:code", h.deleteRegistrationCode)
+		registration.POST("/organization", h.createOrganization)
 	}
 
 	materialsType := api.Group("/materialsType")

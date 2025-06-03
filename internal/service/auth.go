@@ -57,6 +57,10 @@ func (a *AuthService) GetOrganizations() ([]models.Organization, error) {
 	return a.repo.GetOrganizations()
 }
 
+func (a *AuthService) CreateOrganizationWithPrefix(name string, prefix string) error {
+	return a.repo.CreateOrganizationWithPrefix(name, prefix)
+}
+
 func (a *AuthService) DeleteRegistrationCode(code string) error {
 	return a.repo.DeleteRegistrationCode(code)
 }

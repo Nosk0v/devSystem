@@ -136,3 +136,27 @@ func (r *AuthPostgres) GetPrefixByOrgID(orgID int) (string, error) {
 	}
 	return prefix, nil
 }
+
+func (r *AuthPostgres) CreateOrganizationWithPrefix(name, prefix string) error {
+	tx, err := r.db.Beginx()
+	if err != nil {
+		return fmt.Errorf("failed to begin transaction: %w", err)
+	}
+
+	var orgID int
+	orgQuery := `INSERT INTO "Organization" (name) VALUES ($1) RETURNING organization_id`
+	err = tx.QueryRow(orgQuery, name).Scan(&orgID)
+	if err != nil {
+		tx.Rollback()
+		return fmt.Errorf("failed to insert organization: %w", err)
+	}
+
+	prefixQuery := `INSERT INTO "RegistrationPrefix" (prefix, organization_id) VALUES ($1, $2)`
+	_, err = tx.Exec(prefixQuery, prefix, orgID)
+	if err != nil {
+		tx.Rollback()
+		return fmt.Errorf("failed to insert registration prefix: %w", err)
+	}
+
+	return tx.Commit()
+}

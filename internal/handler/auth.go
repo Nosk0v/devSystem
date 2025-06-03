@@ -125,6 +125,30 @@ func (h *Handler) getOrganizations(c *gin.Context) {
 	h.sendResponseSuccess(c, orgs, usecase.Success)
 }
 
+// CreateOrganization godoc
+// @Summary Создание организации
+// @Description Создаёт новую организацию с уникальным префиксом
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param input body models.CreateOrganizationInput true "Данные организации"
+// @Success 201 {object} models.CreateOrganizationOutput
+// @Failure 400 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /auth/organization [post]
+func (h *Handler) createOrganization(c *gin.Context) {
+	var input models.CreateOrganizationInput
+
+	if err := c.ShouldBindJSON(&input); err != nil {
+		logrus.WithError(err).Warn("Некорректный JSON при создании организации")
+		h.sendResponseSuccess(c, nil, usecase.BadRequest)
+		return
+	}
+
+	status := h.usecases.CreateOrganizationWithPrefix(input)
+	h.sendResponseSuccess(c, status, usecase.Success)
+}
+
 // CreateRegistrationCode godoc
 // @Summary Создание регистрационного кода
 // @Description Генерация одноразового кода для регистрации

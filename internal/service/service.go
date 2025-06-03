@@ -39,6 +39,7 @@ type Auth interface {
 	CreateRegistrationCode(prefix string, isAdmin bool) (string, error)
 	MarkRegistrationCodeAsUsed(code string) error
 	GetPrefixByOrgID(orgID int) (string, error)
+	CreateOrganizationWithPrefix(name string, prefix string) error
 }
 
 type JWTToken interface {
