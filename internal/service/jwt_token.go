@@ -36,12 +36,13 @@ func getSecretKey(config models.ServerConfig) []byte {
 	return []byte(config.JWTSecretKey)
 }
 
-func (s *JWTTokenService) GenerateAccessToken(email string, role int, orgID *int) (string, error) {
+func (s *JWTTokenService) GenerateAccessToken(email string, role int, orgID *int, deptID *int) (string, error) {
 	claims := models.JWTClaims{
 		Email:          email,
 		TokenType:      "access",
 		Role:           role,
 		OrganizationID: orgID,
+		DepartmentID:   deptID,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(AccessTokenTTL).UTC()),
 			IssuedAt:  jwt.NewNumericDate(time.Now().UTC()),
@@ -52,12 +53,13 @@ func (s *JWTTokenService) GenerateAccessToken(email string, role int, orgID *int
 	return token.SignedString(getSecretKey(s.config))
 }
 
-func (s *JWTTokenService) GenerateRefreshToken(email string, role int, orgID *int) (string, error) {
+func (s *JWTTokenService) GenerateRefreshToken(email string, role int, orgID *int, deptID *int) (string, error) {
 	claims := models.JWTClaims{
 		Email:          email,
 		TokenType:      "refresh",
 		Role:           role,
 		OrganizationID: orgID,
+		DepartmentID:   deptID,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(RefreshTokenTTL).UTC()),
 			IssuedAt:  jwt.NewNumericDate(time.Now().UTC()),
@@ -91,7 +93,7 @@ func (s *JWTTokenService) RefreshToken(token string) (string, error) {
 		return "", err
 	}
 
-	newRefreshToken, err := s.GenerateRefreshToken(claims.Email, claims.Role, claims.OrganizationID)
+	newRefreshToken, err := s.GenerateRefreshToken(claims.Email, claims.Role, claims.OrganizationID, claims.DepartmentID)
 	if err != nil {
 		logrus.Error(err.Error())
 		return "", err
@@ -123,7 +125,7 @@ func (s *JWTTokenService) GenerateAccessFromRefresh(refreshToken string) (string
 		return "", errors.New("refresh token is expired")
 	}
 
-	accessToken, err := s.GenerateAccessToken(claims.Email, claims.Role, claims.OrganizationID)
+	accessToken, err := s.GenerateAccessToken(claims.Email, claims.Role, claims.OrganizationID, claims.DepartmentID)
 	if err != nil {
 		logrus.Error("Error generating access token:", err)
 		return "", err

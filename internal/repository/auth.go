@@ -28,11 +28,10 @@ func (r *AuthPostgres) AccountExists(email string) (bool, error) {
 }
 
 func (r *AuthPostgres) CreateAccount(input *models.SignUpInput) error {
-
 	query := `
-	INSERT INTO "Account" ("email", "password", "name", "role", "organization_id") 
-	VALUES ($1, $2, $3, $4, $5)`
-	_, err := r.db.Exec(query, input.Email, input.Password, input.Name, input.Role, input.OrganizationID)
+	INSERT INTO "Account" ("email", "password", "name", "role", "organization_id", "department_id") 
+	VALUES ($1, $2, $3, $4, $5, $6)`
+	_, err := r.db.Exec(query, input.Email, input.Password, input.Name, input.Role, input.OrganizationID, input.DepartmentID)
 	return err
 }
 
@@ -50,6 +49,16 @@ func (r *AuthPostgres) GetOrganizations() ([]models.Organization, error) {
 		return nil, err
 	}
 	return orgs, nil
+}
+
+func (r *AuthPostgres) GetDepartments() ([]models.Department, error) {
+	var departments []models.Department
+	query := `SELECT department_id, name FROM "Department"`
+	err := r.db.Select(&departments, query)
+	if err != nil {
+		return nil, err
+	}
+	return departments, nil
 }
 
 func encodeWithMaskedPrefix(prefix string, n int) string {
@@ -85,17 +94,17 @@ func formatCode(code string) string {
 	return strings.Join(result, "-")
 }
 
-func (r *AuthPostgres) CreateRegistrationCode(prefix string, isAdmin bool) (string, error) {
+func (r *AuthPostgres) CreateRegistrationCode(prefix string, isAdmin bool, departmentID *int) (string, error) {
 	code := encodeWithMaskedPrefix(prefix, 30)
 	role := 1
 	if isAdmin {
 		role = 0
 	}
 	query := `
-	INSERT INTO "InviteCode" (code, prefix, role, used, expires_at, created_at)
-	VALUES ($1, $2, $3, FALSE, NULL, $4)
+	INSERT INTO "InviteCode" (code, prefix, role, used, expires_at, created_at, department_id)
+	VALUES ($1, $2, $3, FALSE, NULL, $4, $5)
 	`
-	_, err := r.db.Exec(query, code, prefix, role, time.Now())
+	_, err := r.db.Exec(query, code, prefix, role, time.Now(), departmentID)
 	if err != nil {
 		return "", fmt.Errorf("failed to create registration code: %w", err)
 	}
@@ -106,10 +115,12 @@ func (r *AuthPostgres) GetRegistrationCodeInfo(code string) (*models.Registratio
 	var info models.RegistrationCode
 	query := `
 		SELECT rc.code, rc.prefix, rc.role, rc.used, rc.expires_at, rc.created_at,
-		       o.organization_id, o.name AS organization_name
+		       o.organization_id, o.name AS organization_name,
+		       d.department_id, d.name AS department_name
 		FROM "InviteCode" rc
 		JOIN "RegistrationPrefix" rp ON rc.prefix = rp.prefix
 		JOIN "Organization" o ON rp.organization_id = o.organization_id
+		LEFT JOIN "Department" d ON rc.department_id = d.department_id
 		WHERE rc.code = $1
 	`
 	err := r.db.Get(&info, query, code)
@@ -189,4 +200,29 @@ func (r *AuthPostgres) DeleteOrganization(orgID int) error {
 	}
 
 	return tx.Commit()
+}
+
+func (r *AuthPostgres) GetUsersByOrganization(orgID int) ([]models.UserResponse, error) {
+	query := `SELECT email, name, department_id, role FROM "Account" WHERE organization_id = $1`
+	rows, err := r.db.Query(query, orgID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var users []models.UserResponse
+	for rows.Next() {
+		var u models.UserResponse
+		if err := rows.Scan(&u.Email, &u.Name, &u.DepartmentID, &u.Role); err != nil {
+			return nil, err
+		}
+		users = append(users, u)
+	}
+	return users, nil
+}
+
+func (r *AuthPostgres) DeleteUser(email string) error {
+	query := `DELETE FROM "Account" WHERE email = $1`
+	_, err := r.db.Exec(query, email)
+	return err
 }

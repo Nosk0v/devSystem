@@ -10,6 +10,7 @@ type Account struct {
 	Name           string `db:"name" json:"name"`
 	Role           int    `db:"role" json:"role"`
 	OrganizationID *int   `db:"organization_id" json:"organization_id"`
+	DepartmentID   *int   `db:"department_id" json:"department_id"`
 }
 
 type JWTClaims struct {
@@ -17,5 +18,11 @@ type JWTClaims struct {
 	TokenType      string `json:"token_type"`
 	Role           int    `json:"role"`
 	OrganizationID *int   `json:"organization_id,omitempty"`
+	DepartmentID   *int   `json:"department_id,omitempty"`
 	jwt.RegisteredClaims
+}
+
+type Department struct {
+	DepartmentID int    `db:"department_id" json:"department_id"`
+	Name         string `db:"name" json:"name"`
 }

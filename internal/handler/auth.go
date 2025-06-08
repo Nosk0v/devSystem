@@ -5,6 +5,7 @@ import (
 	"devSystem/models"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
+	"net/http"
 	"strconv"
 )
 
@@ -154,6 +155,24 @@ func (h *Handler) getOrganizations(c *gin.Context) {
 	h.sendResponseSuccess(c, orgs, usecase.Success)
 }
 
+// GetDepartments godoc
+// @Summary Получить список департаментов
+// @Description Возвращает все доступные департаменты
+// @Tags auth
+// @Produce json
+// @Success 200 {array} models.Department
+// @Failure 500 {object} ErrorResponse
+// @Router /auth/departments [get]
+func (h *Handler) getDepartments(c *gin.Context) {
+	departments, err := h.usecases.GetDepartments()
+	if err != nil {
+		logrus.WithError(err).Error("Ошибка при получении департаментов")
+		h.sendResponseSuccess(c, nil, usecase.InternalServerError)
+		return
+	}
+	h.sendResponseSuccess(c, departments, usecase.Success)
+}
+
 // CreateOrganization godoc
 // @Summary Создание организации
 // @Description Создаёт новую организацию с уникальным префиксом
@@ -198,7 +217,7 @@ func (h *Handler) createRegistrationCode(c *gin.Context) {
 		return
 	}
 
-	code, err := h.usecases.CreateRegistrationCode(input.OrganizationID, input.IsAdmin)
+	code, err := h.usecases.CreateRegistrationCode(input.OrganizationID, input.IsAdmin, input.DepartmentID)
 	if err != nil {
 		logrus.WithError(err).Error("Ошибка при создании регистрационного кода")
 		h.sendResponseSuccess(c, nil, usecase.InternalServerError)
@@ -232,4 +251,89 @@ func (h *Handler) deleteRegistrationCode(c *gin.Context) {
 	}
 
 	h.sendResponseSuccess(c, gin.H{"message": "Код удалён"}, usecase.Success)
+}
+
+// GetOrganizationUsers godoc
+// @Summary Получить пользователей организации
+// @Description Возвращает список всех пользователей в организации (по JWT или query).
+// @Tags users
+// @Accept json
+// @Produce json
+// @Param organization_id query int false "ID организации (только для SuperAdmin)"
+// @Success 200 {array} models.UserResponse
+// @Failure 401 {object} ErrorResponse
+// @Failure 403 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /users/organization [get]
+func (h *Handler) getOrganizationUsers(c *gin.Context) {
+	claims, err := h.GetJWTClaims(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, ErrorResponse{Error: "Unauthorized"})
+		return
+	}
+
+	var orgID int
+	if claims.Role == usecase.RoleSuperAdmin {
+		orgIDStr := c.Query("organization_id")
+		if orgIDStr == "" {
+			c.JSON(http.StatusBadRequest, ErrorResponse{Error: "organization_id is required for SuperAdmin"})
+			return
+		}
+		orgID, err = strconv.Atoi(orgIDStr)
+		if err != nil || orgID <= 0 {
+			c.JSON(http.StatusBadRequest, ErrorResponse{Error: "Invalid organization_id"})
+			return
+		}
+	} else {
+		if claims.OrganizationID == nil {
+			c.JSON(http.StatusForbidden, ErrorResponse{Error: "Organization ID missing from token"})
+			return
+		}
+		orgID = *claims.OrganizationID
+	}
+
+	users, err := h.usecases.GetUsersByOrganization(orgID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: "Failed to fetch users"})
+		return
+	}
+
+	c.JSON(http.StatusOK, users)
+}
+
+// DeleteUser godoc
+// @Summary Удаление пользователя
+// @Description Удаляет пользователя по email. Только для SuperAdmin.
+// @Tags users
+// @Param email path string true "Email пользователя"
+// @Success 200 {object} map[string]string "User deleted successfully"
+// @Failure 400 {object} ErrorResponse "Email is required"
+// @Failure 401 {object} ErrorResponse "Unauthorized"
+// @Failure 403 {object} ErrorResponse "Only super admin can delete users"
+// @Failure 500 {object} ErrorResponse "Failed to delete user"
+// @Router /auth/users/{email} [delete]
+func (h *Handler) deleteUser(c *gin.Context) {
+	email := c.Param("email")
+	if email == "" {
+		c.JSON(http.StatusBadRequest, ErrorResponse{Error: "Email is required"})
+		return
+	}
+
+	claims, err := h.GetJWTClaims(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, ErrorResponse{Error: "Unauthorized"})
+		return
+	}
+
+	if claims.Role != usecase.RoleSuperAdmin {
+		c.JSON(http.StatusForbidden, ErrorResponse{Error: "Only super admin can delete users"})
+		return
+	}
+
+	if err := h.usecases.DeleteUser(email, claims.Role); err != nil {
+		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: "Failed to delete user"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "User deleted successfully"})
 }

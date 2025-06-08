@@ -50,6 +50,10 @@ func (a *AuthService) SignUp(input *models.SignUpInput) error {
 	return nil
 }
 
+func (a *AuthService) GetDepartments() ([]models.Department, error) {
+	return a.repo.GetDepartments()
+}
+
 func (s *AuthService) MarkRegistrationCodeAsUsed(code string) error {
 	return s.repo.MarkRegistrationCodeAsUsed(code)
 }
@@ -69,8 +73,8 @@ func (a *AuthService) GetRegistrationCodeInfo(code string) (*models.Registration
 	return a.repo.GetRegistrationCodeInfo(code)
 }
 
-func (a *AuthService) CreateRegistrationCode(prefix string, isAdmin bool) (string, error) {
-	return a.repo.CreateRegistrationCode(prefix, isAdmin)
+func (a *AuthService) CreateRegistrationCode(prefix string, isAdmin bool, departmentID *int) (string, error) {
+	return a.repo.CreateRegistrationCode(prefix, isAdmin, departmentID)
 }
 
 func (a *AuthService) GetPrefixByOrgID(orgID int) (string, error) {
@@ -79,4 +83,12 @@ func (a *AuthService) GetPrefixByOrgID(orgID int) (string, error) {
 
 func (a *AuthService) DeleteOrganization(orgID int) error {
 	return a.repo.DeleteOrganization(orgID)
+}
+
+func (s *AuthService) GetUsersByOrganization(orgID int) ([]models.UserResponse, error) {
+	return s.repo.GetUsersByOrganization(orgID)
+}
+
+func (s *AuthService) DeleteUser(email string) error {
+	return s.repo.DeleteUser(email)
 }

@@ -19,6 +19,9 @@ func (u *Usecase) CreateCourse(course models.Course) (int, error) {
 	if course.OrganizationID <= 0 {
 		return 0, fmt.Errorf("organization is required")
 	}
+	if course.DepartmentID <= 0 {
+		return 0, fmt.Errorf("department is required")
+	}
 
 	courseID, err := u.services.Course.CreateCourse(course)
 	if err != nil {
@@ -54,16 +57,7 @@ func (u *Usecase) GetCourse(id int) (*models.CourseResponse, error) {
 		return nil, fmt.Errorf("error fetching course with ID %d: %w", id, err)
 	}
 
-	return &models.CourseResponse{
-		CourseID:       course.CourseID,
-		Title:          course.Title,
-		Description:    course.Description,
-		CreatedBy:      course.CreatedBy,
-		Competencies:   course.Competencies,
-		Materials:      course.Materials,
-		CreateDate:     course.CreateDate,
-		OrganizationID: course.OrganizationID,
-	}, nil
+	return &course, nil
 }
 
 func (u *Usecase) GetCoursesByClaims(claims *models.JWTClaims) ([]models.CourseResponse, error) {
@@ -72,16 +66,36 @@ func (u *Usecase) GetCoursesByClaims(claims *models.JWTClaims) ([]models.CourseR
 	switch claims.Role {
 	case RoleSuperAdmin:
 		return u.getAllCourses()
-	case RoleAdmin, RoleUser:
+	case RoleAdmin:
 		if claims.OrganizationID == nil || *claims.OrganizationID <= 0 {
 			return nil, fmt.Errorf("organization is required for this role")
 		}
 		return u.getCoursesByOrganization(*claims.OrganizationID)
+
+	case RoleUser:
+		if claims.OrganizationID == nil || *claims.OrganizationID <= 0 {
+			return nil, fmt.Errorf("organization is required for this role")
+		}
+		if claims.DepartmentID == nil || *claims.DepartmentID <= 0 {
+			return nil, fmt.Errorf("department is required for user role")
+		}
+		return u.getCoursesByDepartment(*claims.OrganizationID, *claims.DepartmentID)
 	default:
 		return nil, fmt.Errorf("unauthorized role: %d", claims.Role)
 	}
+
 }
 
+func (u *Usecase) GetOrganizationCourseProgress(orgID int) ([]models.UserCourseProgress, error) {
+	if orgID <= 0 {
+		return nil, fmt.Errorf("invalid organization ID")
+	}
+	progress, err := u.services.Course.GetCourseProgressByOrganization(orgID)
+	if err != nil {
+		return nil, fmt.Errorf("error getting organization course progress: %w", err)
+	}
+	return progress, nil
+}
 func (u *Usecase) UpdateCourse(course models.Course) error {
 	if course.OrganizationID <= 0 {
 		return fmt.Errorf("organization is required for update")
@@ -100,7 +114,6 @@ func (u *Usecase) DeleteCourse(id int) error {
 }
 
 func (u *Usecase) getAllCourses() ([]models.CourseResponse, error) {
-	log.Printf("Fetching all courses (superadmin only)")
 	courses, err := u.services.Course.GetAllCourses()
 	if err != nil {
 		return nil, fmt.Errorf("error fetching all courses: %w", err)
@@ -109,10 +122,17 @@ func (u *Usecase) getAllCourses() ([]models.CourseResponse, error) {
 }
 
 func (u *Usecase) getCoursesByOrganization(orgID int) ([]models.CourseResponse, error) {
-	log.Printf("Fetching courses for organization: %d", orgID)
 	courses, err := u.services.Course.GetCoursesByOrganization(orgID)
 	if err != nil {
 		return nil, fmt.Errorf("error fetching courses by organization: %w", err)
+	}
+	return courses, nil
+}
+
+func (u *Usecase) getCoursesByDepartment(orgID int, department int) ([]models.CourseResponse, error) {
+	courses, err := u.services.Course.GetCoursesByDepartment(orgID, department)
+	if err != nil {
+		return nil, fmt.Errorf("error fetching courses by department: %w", err)
 	}
 	return courses, nil
 }

@@ -24,6 +24,7 @@ type MaterialResponse struct {
 	Title        string         `db:"title" json:"title" example:"Введение в Go"`
 	Description  string         `db:"description" json:"description" example:"Руководство для начинающих по программированию на языке Go"`
 	TypeName     string         `db:"type_name" json:"type_name" example:"Статья"`
+	TypeID       int            `db:"type_id" json:"type_id"`
 	Content      string         `db:"content" json:"content" example:"Go - статически типизированный..."`
 	Competencies pq.StringArray `db:"competencies" json:"competencies" swaggertype:"array,string" example:"[\"Основы ООП\", \"Знание синтаксиса\"]"`
 	CreateDate   time.Time      `db:"create_date" json:"create_date" example:"2024-11-28T15:04:05Z"`

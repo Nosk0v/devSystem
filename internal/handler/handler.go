@@ -50,6 +50,7 @@ func (h *Handler) InitRoutes() *gin.Engine {
 	{
 		registration.GET("/organizations", h.getOrganizations)
 		registration.POST("/code", h.createRegistrationCode)
+		registration.GET("/departments", h.getDepartments)
 		registration.DELETE("/code/:code", h.deleteRegistrationCode)
 		registration.POST("/organization", h.createOrganization)
 		registration.DELETE("/organization/:id", h.deleteOrganization)
@@ -82,12 +83,19 @@ func (h *Handler) InitRoutes() *gin.Engine {
 			course.GET("", h.getCourse)
 			course.PUT("", h.updateCourse)
 			course.DELETE("", h.deleteCourse)
+			courses.GET("/progress/organization", h.getOrganizationCourseProgress)
 
 			course.POST("/complete", h.completeCourse)
 			course.GET("/progress", h.getCourseProgress)
 			course.GET("/completed", h.isCourseCompleted)
 			course.POST("/materials/:material_id/complete", h.markMaterialAsCompleted)
 		}
+		users := api.Group("/users", h.UserIdentityMiddleware)
+		{
+			users.GET("/organization", h.getOrganizationUsers)
+		}
+
+		auth.DELETE("/users/:email", h.deleteUser)
 	}
 
 	return router

@@ -10,6 +10,10 @@ CREATE TABLE IF NOT EXISTS "Organization" (
                                               "name" VARCHAR(255) NOT NULL UNIQUE
 );
 
+CREATE TABLE IF NOT EXISTS "Department" (
+                                            "department_id" SERIAL PRIMARY KEY,
+                                            "name" VARCHAR(255) NOT NULL UNIQUE
+);
 CREATE TABLE IF NOT EXISTS "MaterialType" (
                                               "type_id" SERIAL PRIMARY KEY,
                                               "type" VARCHAR(50) NOT NULL UNIQUE
@@ -50,7 +54,8 @@ CREATE TABLE IF NOT EXISTS "Account" (
                                          "password" VARCHAR,
                                          "name" VARCHAR,
                                          "role" INTEGER NOT NULL REFERENCES "Role"("id"),
-                                         "organization_id" INTEGER REFERENCES "Organization"("organization_id") ON DELETE CASCADE
+                                         "organization_id" INTEGER REFERENCES "Organization"("organization_id") ON DELETE CASCADE,
+                                         "department_id" INTEGER REFERENCES "Department"("department_id") ON DELETE SET NULL
 );
 
 
@@ -61,7 +66,8 @@ CREATE TABLE IF NOT EXISTS "Course" (
                                         "description" TEXT NOT NULL,
                                         "create_date" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                                         "created_by" VARCHAR REFERENCES "Account"("email") ON DELETE SET NULL,
-                                        "organization_id" INTEGER REFERENCES "Organization"("organization_id") ON DELETE CASCADE
+                                        "organization_id" INTEGER REFERENCES "Organization"("organization_id") ON DELETE CASCADE,
+                                        "department_id" INTEGER REFERENCES "Department"("department_id") ON DELETE SET NULL
 );
 
 
@@ -108,19 +114,39 @@ CREATE TABLE "InviteCode" (
                               role INT NOT NULL DEFAULT 1,                  -- 1=user, 2=admin
                               used BOOLEAN NOT NULL DEFAULT FALSE,
                               expires_at TIMESTAMP,                         -- NULL = бессрочный
-                              created_at TIMESTAMP DEFAULT now()
+                              created_at TIMESTAMP DEFAULT now(),
+                              "department_id" INTEGER REFERENCES "Department"("department_id") ON DELETE SET NULL
 );
+
 
 INSERT INTO "Organization" ("name") VALUES
                                         ('ООО Альфа'),
                                         ('ЗАО Омега');
 
 
+
+INSERT INTO "Department" ("name") VALUES
+                                      ('Информационные технологии'),
+                                      ('Менеджмент'),
+                                      ('Дизайн'),
+                                      ('Маркетинг'),
+                                      ('Финансы'),
+                                      ('Юриспруденция'),
+                                      ('Продажи'),
+                                      ('Образование и развитие'),
+                                      ('Клиентский сервис'),
+                                      ('Производство'),
+                                      ('Аналитика'),
+                                      ('Инженерия'),
+                                      ('Логистика и снабжение'),
+                                      ('Безопасность и комплаенс'),
+                                      ('Человеческие ресурсы');
+
 INSERT INTO "MaterialType" ("type")
 VALUES
+    ('Текст'),
     ('Статья'),
-    ('Книга'),
-    ('Видео');
+    ('Ссылка на видео');
 
 INSERT INTO "RegistrationPrefix" ("prefix", "organization_id")
 VALUES
@@ -201,30 +227,29 @@ VALUES
     (2, 'Супер админ');
 
 -- Аккаунты
-INSERT INTO "Account" ("email", "password", "name", "role", "organization_id") VALUES
-                                                                                   ('1234@mail.ru', '$2a$10$hitarfnbzlubZuZtQKITq.6zoul4yywj1f6Sn0dl.N41uuRwGhXKm', 'Иванов Иван Иванович', 0, 1),
-                                                                                   ('5678@mail.ru', '$2a$10$hitarfnbzlubZuZtQKITq.6zoul4yywj1f6Sn0dl.N41uuRwGhXKm', 'Петров Петр Петрович', 1, 2),
-                                                                                       ('root@system.dev', '$2a$10$hitarfnbzlubZuZtQKITq.6zoul4yywj1f6Sn0dl.N41uuRwGhXKm', 'Суперадмин', 2, NULL);
+INSERT INTO "Account" ("email", "password", "name", "role", "organization_id", "department_id") VALUES
+                                                                                                    ('1234@mail.ru', '$2a$10$hitarfnbzlubZuZtQKITq.6zoul4yywj1f6Sn0dl.N41uuRwGhXKm', 'Иванов Иван Иванович', 0, 1, 1), -- Разработка
+                                                                                                    ('5678@mail.ru', '$2a$10$hitarfnbzlubZuZtQKITq.6zoul4yywj1f6Sn0dl.N41uuRwGhXKm', 'Петров Петр Петрович', 1, 2, 1), -- Продажи
+                                                                                                    ('root@system.dev', '$2a$10$hitarfnbzlubZuZtQKITq.6zoul4yywj1f6Sn0dl.N41uuRwGhXKm', 'Суперадмин', 2, NULL, NULL);
 
-
-INSERT INTO "Course" ("title", "description", "created_by", "organization_id") VALUES
-                                                                                ('Курс по Backend', 'Освоение серверной разработки на Go и PostgreSQL', '1234@mail.ru', 1),
-                                                                                ('Frontend для начинающих', 'Изучение React и вёрстки с нуля', '5678@mail.ru', 2),
-                                                                                ('Основы Golang', 'Курс по основам языка программирования Go', '1234@mail.ru', 1),
-                                                                                ('Микросервисы на Go', 'Создание микросервисной архитектуры', '1234@mail.ru', 1),
-                                                                                ('GRPC и Protocol Buffers', 'Работа с gRPC и Protobuf в бэкенде', '1234@mail.ru', 1),
-                                                                                ('JWT и безопасность API', 'Реализация авторизации на JWT', '1234@mail.ru', 1),
-                                                                                ('Docker для разработчиков', 'Контейнеризация сервисов и Dockerfile', '1234@mail.ru', 1),
-                                                                                ('CI/CD с GitHub Actions', 'Автоматизация сборок и деплоя', '1234@mail.ru', 1),
-                                                                                ('SQL и оптимизация запросов', 'Повышение производительности SQL-запросов', '1234@mail.ru', 1),
-                                                                                ('PostgreSQL в бою', 'Использование расширений и индексов', '1234@mail.ru', 1),
-                                                                                ('Работа с REST API', 'Создание и тестирование REST-интерфейсов', '1234@mail.ru', 1),
-                                                                                ('Тестирование бэкенда', 'Unit, интеграционные и e2e тесты', '1234@mail.ru', 1),
-                                                                                ('Проектирование БД', 'Связи, нормализация, схема', '1234@mail.ru', 1),
-                                                                                ('Введение в DevOps', 'Как связаны разработка и эксплуатация', '1234@mail.ru', 1),
-                                                                                ('Мониторинг и алертинг', 'Grafana, Prometheus, alertmanager', '1234@mail.ru', 1),
-                                                                                ('Методологии Scrum и Agile', 'Управление командной разработкой', '1234@mail.ru', 1),
-                                                                                ('Секреты производительности Go', 'Профилирование и ускорение кода', '1234@mail.ru', 1);
+INSERT INTO "Course" ("title", "description", "created_by", "organization_id", "department_id") VALUES
+                                                                                                    ('Курс по Backend', 'Освоение серверной разработки на Go и PostgreSQL', '1234@mail.ru', 1, 1), -- Информационные технологии
+                                                                                                    ('Frontend для начинающих', 'Изучение React и вёрстки с нуля', '5678@mail.ru', 2, 1), -- Информационные технологии
+                                                                                                    ('Основы Golang', 'Курс по основам языка программирования Go', '1234@mail.ru', 1, 1), -- Информационные технологии
+                                                                                                    ('Микросервисы на Go', 'Создание микросервисной архитектуры', '1234@mail.ru', 1, 1), -- Информационные технологии
+                                                                                                    ('GRPC и Protocol Buffers', 'Работа с gRPC и Protobuf в бэкенде', '1234@mail.ru', 1, 1), -- Информационные технологии
+                                                                                                    ('JWT и безопасность API', 'Реализация авторизации на JWT', '1234@mail.ru', 1, 14), -- Безопасность и комплаенс
+                                                                                                    ('Docker для разработчиков', 'Контейнеризация сервисов и Dockerfile', '1234@mail.ru', 1, 1), -- Информационные технологии
+                                                                                                    ('CI/CD с GitHub Actions', 'Автоматизация сборок и деплоя', '1234@mail.ru', 1, 1), -- Информационные технологии
+                                                                                                    ('SQL и оптимизация запросов', 'Повышение производительности SQL-запросов', '1234@mail.ru', 1, 11), -- Аналитика
+                                                                                                    ('PostgreSQL в бою', 'Использование расширений и индексов', '1234@mail.ru', 1, 11), -- Аналитика
+                                                                                                    ('Работа с REST API', 'Создание и тестирование REST-интерфейсов', '1234@mail.ru', 1, 1), -- Информационные технологии
+                                                                                                    ('Тестирование бэкенда', 'Unit, интеграционные и e2e тесты', '1234@mail.ru', 1, 1), -- Информационные технологии
+                                                                                                    ('Проектирование БД', 'Связи, нормализация, схема', '1234@mail.ru', 1, 11), -- Аналитика
+                                                                                                    ('Введение в DevOps', 'Как связаны разработка и эксплуатация', '1234@mail.ru', 1, 1), -- Информационные технологии
+                                                                                                    ('Мониторинг и алертинг', 'Grafana, Prometheus, alertmanager', '1234@mail.ru', 1, 1), -- Информационные технологии
+                                                                                                    ('Методологии Scrum и Agile', 'Управление командной разработкой', '1234@mail.ru', 1, 2), -- Менеджмент
+                                                                                                    ('Секреты производительности Go', 'Профилирование и ускорение кода', '1234@mail.ru', 1, 1); -- Информационные технологии
 
 -- Связи курс-материал
 INSERT INTO "CourseMaterial" ("course_id", "material_id") VALUES
@@ -270,16 +295,28 @@ INSERT INTO "CourseCompetency" ("course_id", "competency_id") VALUES
                                                                   (16, 1), (16, 19),
                                                                   (17, 14), (17, 2);
 
+INSERT INTO "Competency" ("name", "description", "parent_id") VALUES
+  ('Коммуникативная грамотность', 'Совокупность знаний, умений и навыков человека, позволяющих ему эффективно общаться в стандартных коммуникативных ситуациях в письменной и устной форме', NULL),
+  ('Партнерство/сотрудничество', 'Корректное взаимодействие с другими людьми, выстраивание отношений сотрудничества, выявление и учёт потребностей и интересов других, предложение взаимовыгодных решений и работу над совместным развитием идей или проектов для достижения общей цели', NULL),
+  ('Эмоциональный интеллект', 'Способность человека распознавать свои и чужие эмоции, понимать намерения собеседника, его мотивацию и желания', NULL),
+  ('Лидерство', 'Способность определённого человека эффективно влиять на действия, поведение и мотивацию других людей с целью достижения определённого результата', NULL),
+  ('Стрессоустойчивость', 'Совокупность качеств, позволяющих организму спокойно переносить действие стрессоров без вредных всплесков эмоций, влияющих на деятельность и на окружающих, а также способных вызывать психические расстройства', NULL);
+
 
 -- +goose Down
 DROP TABLE IF EXISTS "MaterialCompetency";
-DROP TABLE IF EXISTS  "Course";
-DROP TABLE IF EXISTS  "CourseMaterial";
-DROP TABLE IF EXISTS  "CourseCompetency";
+DROP TABLE IF EXISTS "CourseMaterial";
+DROP TABLE IF EXISTS "CourseCompetency";
+DROP TABLE IF EXISTS "MaterialProgress";
+DROP TABLE IF EXISTS "CourseProgress";
+DROP TABLE IF EXISTS "Course";
 DROP TABLE IF EXISTS "Material";
 DROP TABLE IF EXISTS "Competency";
 DROP TABLE IF EXISTS "MaterialType";
+DROP TABLE IF EXISTS "InviteCode";
+DROP TABLE IF EXISTS "RegistrationPrefix";
 DROP TABLE IF EXISTS "Account";
 DROP TABLE IF EXISTS "Role";
-DROP TABLE IF EXISTS "CourseProgress";
+DROP TABLE IF EXISTS "Department";
+DROP TABLE IF EXISTS "Organization";
 DROP TABLE IF EXISTS "goose_db_version";

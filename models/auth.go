@@ -22,6 +22,7 @@ type SignUpInput struct {
 	Name           *string `json:"name"`
 	Role           int
 	OrganizationID int    `json:"organization"`
+	DepartmentID   *int   `json:"department_id"`
 	Code           string `json:"code"`
 }
 
@@ -34,12 +35,14 @@ type RegistrationCode struct {
 	Code             string     `db:"code" json:"code"`
 	Prefix           string     `db:"prefix" json:"prefix"`
 	OrganizationID   int        `db:"organization_id" json:"organization_id"`
+	DepartmentID     *int       `db:"department_id" json:"department_id,omitempty"`
 	MakeAdmin        bool       `db:"make_admin" json:"make_admin"`
 	IsUsed           bool       `db:"used" json:"is_used"`
-	ExpiresAt        *time.Time `db:"expires_at" json:"expires_at"` // ← добавлено
+	ExpiresAt        *time.Time `db:"expires_at" json:"expires_at"`
 	CreatedAt        time.Time  `db:"created_at" json:"created_at"`
 	Role             int        `db:"role" json:"role"`
 	OrganizationName string     `db:"organization_name"`
+	DepartmentName   string     `db:"department_name"`
 	UsedAt           *time.Time `db:"used_at" json:"used_at"`
 }
 
@@ -57,8 +60,16 @@ type SignUpOutput struct {
 type CreateRegistrationCodeInput struct {
 	OrganizationID int  `json:"organization_id"`
 	IsAdmin        bool `json:"is_admin"`
+	DepartmentID   *int `json:"department_id,omitempty"`
 }
 
 type RegistrationCodeOutput struct {
 	Code string `json:"code"`
+}
+
+type UserResponse struct {
+	Email        string `json:"email"`
+	Name         string `json:"name"`
+	DepartmentID int    `json:"department_id"`
+	Role         int    `json:"role"`
 }

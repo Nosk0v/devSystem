@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"devSystem/models"
+	"fmt"
 	"github.com/sirupsen/logrus"
 	"strings"
 	"time"
@@ -20,13 +21,13 @@ func (u *Usecase) SignIn(input *models.SignInInput) (*models.SignInOutput, Error
 		return nil, Unauthorized
 	}
 
-	accessToken, err := u.services.JWTToken.GenerateAccessToken(account.Email, account.Role, account.OrganizationID)
+	accessToken, err := u.services.JWTToken.GenerateAccessToken(account.Email, account.Role, account.OrganizationID, account.DepartmentID)
 	if err != nil {
 		logrus.Error("ошибка генерации Access токена: ", err)
 		return nil, InternalServerError
 	}
 
-	refreshToken, err := u.services.JWTToken.GenerateRefreshToken(account.Email, account.Role, account.OrganizationID)
+	refreshToken, err := u.services.JWTToken.GenerateRefreshToken(account.Email, account.Role, account.OrganizationID, account.DepartmentID)
 	if err != nil {
 		logrus.Error("ошибка генерации Refresh токена: ", err)
 		return nil, InternalServerError
@@ -79,6 +80,7 @@ func (u *Usecase) SignUp(input *models.SignUpInput) ErrorCode {
 		input.Role = 1 // обычный
 	}
 	input.OrganizationID = codeInfo.OrganizationID
+	input.DepartmentID = codeInfo.DepartmentID
 
 	// Регистрируем
 	err = u.services.Auth.SignUp(input)
@@ -117,6 +119,10 @@ func (u *Usecase) GetOrganizations() ([]models.Organization, error) {
 	return u.services.Auth.GetOrganizations()
 }
 
+func (u *Usecase) GetDepartments() ([]models.Department, error) {
+	return u.services.Auth.GetDepartments()
+}
+
 func (u *Usecase) DeleteRegistrationCode(code string) error {
 	return u.services.Auth.DeleteRegistrationCode(code)
 }
@@ -125,14 +131,14 @@ func (u *Usecase) GetRegistrationCodeInfo(code string) (*models.RegistrationCode
 	return u.services.Auth.GetRegistrationCodeInfo(code)
 }
 
-func (u *Usecase) CreateRegistrationCode(orgID int, isAdmin bool) (string, error) {
+func (u *Usecase) CreateRegistrationCode(orgID int, isAdmin bool, departmentID *int) (string, error) {
 	prefix, err := u.services.Auth.GetPrefixByOrgID(orgID)
 	if err != nil {
 		logrus.WithError(err).Error("не удалось получить префикс по организации")
 		return "", err
 	}
 
-	code, err := u.services.Auth.CreateRegistrationCode(prefix, isAdmin)
+	code, err := u.services.Auth.CreateRegistrationCode(prefix, isAdmin, departmentID)
 	if err != nil {
 		logrus.WithError(err).Error("не удалось создать код регистрации")
 		return "", err
@@ -147,4 +153,15 @@ func (u *Usecase) CreateOrganizationWithPrefix(input models.CreateOrganizationIn
 
 func (u *Usecase) DeleteOrganization(organizationID int) error {
 	return u.services.Auth.DeleteOrganization(organizationID)
+}
+
+func (u *Usecase) GetUsersByOrganization(orgID int) ([]models.UserResponse, error) {
+	return u.services.Auth.GetUsersByOrganization(orgID)
+}
+
+func (u *Usecase) DeleteUser(email string, byRole int) error {
+	if byRole != RoleSuperAdmin {
+		return fmt.Errorf("only super admin can delete users")
+	}
+	return u.services.Auth.DeleteUser(email)
 }

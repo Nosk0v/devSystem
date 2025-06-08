@@ -400,3 +400,57 @@ func (h *Handler) getCompletedCourses(c *gin.Context) {
 
 	c.JSON(http.StatusOK, courses)
 }
+
+// GetOrganizationCourseProgress godoc
+// @Summary Прогресс всех пользователей организации
+// @Description Получает список пользователей и их завершённые курсы по организации
+// @Tags courses
+// @Accept json
+// @Produce json
+// @Param org_id query int false "ID организации (только для SuperAdmin)"
+// @Success 200 {array} models.UserCourseProgress
+// @Failure 401 {object} ErrorResponse
+// @Failure 403 {object} ErrorResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /courses/progress/organization [get]
+func (h *Handler) getOrganizationCourseProgress(c *gin.Context) {
+	claims, err := h.GetJWTClaims(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, ErrorResponse{Error: "Unauthorized"})
+		return
+	}
+
+	var orgID int
+
+	switch claims.Role {
+	case usecase.RoleAdmin:
+		if claims.OrganizationID == nil || *claims.OrganizationID <= 0 {
+			c.JSON(http.StatusBadRequest, ErrorResponse{Error: "Missing organization ID in token"})
+			return
+		}
+		orgID = *claims.OrganizationID
+	case usecase.RoleSuperAdmin:
+		rawOrgID := c.Query("org_id")
+		if rawOrgID == "" {
+			c.JSON(http.StatusBadRequest, ErrorResponse{Error: "org_id query parameter is required"})
+			return
+		}
+		orgID, err = strconv.Atoi(rawOrgID)
+		if err != nil || orgID <= 0 {
+			c.JSON(http.StatusBadRequest, ErrorResponse{Error: "Invalid org_id"})
+			return
+		}
+	default:
+		c.JSON(http.StatusForbidden, ErrorResponse{Error: "Forbidden"})
+		return
+	}
+
+	result, err := h.usecases.GetOrganizationCourseProgress(orgID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: "Failed to fetch organization course progress"})
+		return
+	}
+
+	c.JSON(http.StatusOK, result)
+}

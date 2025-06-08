@@ -104,10 +104,26 @@ func (s *CourseService) CompleteCourse(userEmail string, courseID int) error {
 	return nil
 }
 
+func (s *CourseService) GetCourseProgressByOrganization(orgID int) ([]models.UserCourseProgress, error) {
+	progress, err := s.repo.GetCourseProgressByOrganization(orgID)
+	if err != nil {
+		return nil, fmt.Errorf("error getting course progress for organization: %w", err)
+	}
+	return progress, nil
+}
+
 func (s *CourseService) GetCompletedCourses(userEmail string) ([]models.CourseResponse, error) {
 	courses, err := s.repo.GetCompletedCourses(userEmail)
 	if err != nil {
 		return nil, fmt.Errorf("error getting completed courses: %w", err)
+	}
+	return courses, nil
+}
+
+func (s *CourseService) GetCoursesByDepartment(orgID int, departmentID int) ([]models.CourseResponse, error) {
+	courses, err := s.repo.GetCoursesByDepartment(departmentID, orgID)
+	if err != nil {
+		return nil, fmt.Errorf("error getting courses by department: %w", err)
 	}
 	return courses, nil
 }

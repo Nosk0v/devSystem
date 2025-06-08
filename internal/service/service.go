@@ -36,16 +36,19 @@ type Auth interface {
 	GetOrganizations() ([]models.Organization, error)
 	DeleteRegistrationCode(code string) error
 	GetRegistrationCodeInfo(code string) (*models.RegistrationCode, error)
-	CreateRegistrationCode(prefix string, isAdmin bool) (string, error)
+	CreateRegistrationCode(prefix string, isAdmin bool, departmentID *int) (string, error)
 	MarkRegistrationCodeAsUsed(code string) error
 	GetPrefixByOrgID(orgID int) (string, error)
 	CreateOrganizationWithPrefix(name string, prefix string) error
 	DeleteOrganization(orgID int) error
+	GetUsersByOrganization(orgID int) ([]models.UserResponse, error)
+	GetDepartments() ([]models.Department, error)
+	DeleteUser(email string) error
 }
 
 type JWTToken interface {
-	GenerateAccessToken(email string, role int, orgID *int) (string, error)
-	GenerateRefreshToken(email string, role int, orgID *int) (string, error)
+	GenerateAccessToken(email string, role int, orgID *int, deptID *int) (string, error)
+	GenerateRefreshToken(email string, role int, orgID *int, deptID *int) (string, error)
 	ParseToken(tokenString string) (*models.JWTClaims, error)
 	GenerateAccessFromRefresh(refreshToken string) (string, error)
 }
@@ -64,6 +67,8 @@ type Course interface {
 	CompleteCourse(userEmail string, courseID int) error
 	IsCourseCompleted(userEmail string, courseID int) (bool, error)
 	GetCompletedCourses(userEmail string) ([]models.CourseResponse, error)
+	GetCoursesByDepartment(orgID int, departmentID int) ([]models.CourseResponse, error)
+	GetCourseProgressByOrganization(orgID int) ([]models.UserCourseProgress, error)
 }
 
 type Service struct {

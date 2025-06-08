@@ -59,7 +59,7 @@ func (r *MaterialRepository) LinkMaterialWithCompetencies(materialID int, compet
 func (r *MaterialRepository) GetMaterialByID(id int) (models.MaterialResponse, error) {
 	var material models.MaterialResponse
 	query := `
-		SELECT m.material_id, m.title, m.description, mt.type AS type_name, m.content, m.create_date,
+		SELECT m.material_id, m.title, m.description, m.type AS type_id, mt.type AS type_name, m.content, m.create_date,
 		       array_agg(c.name) AS competencies
 		FROM "Material" m
 		LEFT JOIN "MaterialType" mt ON m.type = mt.type_id
@@ -129,7 +129,7 @@ func (r *MaterialRepository) UpdateMaterial(material models.Material) error {
 func (r *MaterialRepository) GetAllMaterials() ([]models.MaterialResponse, error) {
 	var materials []models.MaterialResponse
 	query := `
-		SELECT m."material_id", m."title", m."description", mt."type" AS type_name, m."content", m."create_date",
+		SELECT m."material_id", m."title", m."description", m.type AS type_id,  mt."type" AS type_name, m."content", m."create_date",
 		       array_agg(c."name") AS competencies
 		FROM "Material" m
 		LEFT JOIN "MaterialType" mt ON m."type" = mt."type_id"

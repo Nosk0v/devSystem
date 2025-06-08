@@ -16,12 +16,20 @@ func NewCourseRepository(db *sqlx.DB) *CourseRepository {
 
 func (r *CourseRepository) CreateCourse(course models.Course) (int, error) {
 	query := `
-		INSERT INTO "Course" (title, description, created_by, create_date, organization_id)
-		VALUES ($1, $2, $3, $4, $5)
+		INSERT INTO "Course" (title, description, created_by, create_date, organization_id, department_id)
+		VALUES ($1, $2, $3, $4, $5, $6)
 		RETURNING course_id
 	`
 	var courseID int
-	err := r.db.QueryRow(query, course.Title, course.Description, course.CreatedBy, course.CreateDate, course.OrganizationID).Scan(&courseID)
+	err := r.db.QueryRow(
+		query,
+		course.Title,
+		course.Description,
+		course.CreatedBy,
+		course.CreateDate,
+		course.OrganizationID,
+		course.DepartmentID, // 👈 добавлено
+	).Scan(&courseID)
 	if err != nil {
 		return 0, fmt.Errorf("error creating course: %w", err)
 	}
@@ -71,6 +79,28 @@ func (r *CourseRepository) GetCourseByID(id int) (models.CourseResponse, error) 
 		return models.CourseResponse{}, fmt.Errorf("error fetching course by ID: %w", err)
 	}
 	return course, nil
+}
+
+func (r *CourseRepository) GetCoursesByDepartment(orgID int, departmentID int) ([]models.CourseResponse, error) {
+	var courses []models.CourseResponse
+	query := `
+		SELECT c.course_id, c.title, c.description, c.created_by, c.create_date, c.organization_id, c.department_id,
+		       array_agg(DISTINCT m.title) AS materials,
+		       array_agg(DISTINCT comp.name) AS competencies,
+		       array_agg(DISTINCT m.material_id) AS material_ids
+		FROM "Course" c
+		LEFT JOIN "CourseMaterial" cm ON c.course_id = cm.course_id
+		LEFT JOIN "Material" m ON cm.material_id = m.material_id
+		LEFT JOIN "CourseCompetency" cc ON c.course_id = cc.course_id
+		LEFT JOIN "Competency" comp ON cc.competency_id = comp.competency_id
+		WHERE c.department_id = $1 AND c.organization_id = $2
+		GROUP BY c.course_id
+	`
+	err := r.db.Select(&courses, query, departmentID, orgID)
+	if err != nil {
+		return nil, fmt.Errorf("error fetching courses for department: %w", err)
+	}
+	return courses, nil
 }
 
 func (r *CourseRepository) GetAllCourses() ([]models.CourseResponse, error) {
@@ -135,10 +165,10 @@ func (r *CourseRepository) UpdateCourse(course models.Course) error {
 
 	query := `
 		UPDATE "Course"
-		SET title = $1, description = $2, created_by = $3
+		SET title = $1, description = $2, created_by = $3, department_id = $4
 		WHERE course_id = $4
 	`
-	_, err = tx.Exec(query, course.Title, course.Description, course.CreatedBy, course.CourseID)
+	_, err = tx.Exec(query, course.Title, course.Description, course.CreatedBy, course.CourseID, course.DepartmentID)
 	if err != nil {
 		tx.Rollback()
 		return fmt.Errorf("failed to update course: %w", err)
@@ -301,4 +331,25 @@ func equalIntSlices(a, b []int) bool {
 		}
 	}
 	return true
+}
+
+func (r *CourseRepository) GetCourseProgressByOrganization(orgID int) ([]models.UserCourseProgress, error) {
+	var progress []models.UserCourseProgress
+	query := `
+		SELECT a.email AS user_email,
+		       c.course_id,
+		       c.title AS course_title,
+		       COALESCE(cp.is_completed, false) AS is_completed,
+		       cp.completed_at
+		FROM "Account" a
+		JOIN "Course" c ON c.organization_id = a.organization_id
+		LEFT JOIN "CourseProgress" cp ON cp.course_id = c.course_id AND cp.user_email = a.email
+		WHERE a.organization_id = $1
+		ORDER BY a.email, c.course_id
+	`
+	err := r.db.Select(&progress, query, orgID)
+	if err != nil {
+		return nil, fmt.Errorf("error fetching course progress by organization: %w", err)
+	}
+	return progress, nil
 }

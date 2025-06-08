@@ -57,6 +57,7 @@ func (u *Usecase) GetAllMaterials() ([]models.MaterialResponse, error) {
 			Title:        material.Title,
 			Description:  material.Description,
 			TypeName:     material.TypeName,
+			TypeID:       material.TypeID,
 			Content:      material.Content,
 			Competencies: material.Competencies,
 			CreateDate:   material.CreateDate,
@@ -106,6 +107,7 @@ func (u *Usecase) GetMaterial(id int) (*models.MaterialResponse, error) {
 		Description:  material.Description,
 		TypeName:     material.TypeName,
 		Content:      material.Content,
+		TypeID:       material.TypeID,
 		Competencies: material.Competencies,
 		CreateDate:   material.CreateDate,
 	}

@@ -44,19 +44,24 @@ type CourseRepositoryInterface interface {
 	CompleteCourse(userEmail string, courseID int) error
 	IsCourseCompleted(userEmail string, courseID int) (bool, error)
 	GetCompletedCourses(userEmail string) ([]models.CourseResponse, error)
+	GetCoursesByDepartment(orgID int, departmentID int) ([]models.CourseResponse, error)
+	GetCourseProgressByOrganization(orgID int) ([]models.UserCourseProgress, error)
 }
 
 type Auth interface {
 	CreateAccount(input *models.SignUpInput) error
+	GetUsersByOrganization(orgID int) ([]models.UserResponse, error)
 	AccountExists(email string) (bool, error)
 	GetOrganizations() ([]models.Organization, error)
 	DeleteRegistrationCode(code string) error
 	GetRegistrationCodeInfo(code string) (*models.RegistrationCode, error)
-	CreateRegistrationCode(prefix string, isAdmin bool) (string, error)
 	MarkRegistrationCodeAsUsed(code string) error
+	CreateRegistrationCode(prefix string, isAdmin bool, departmentID *int) (string, error)
+	GetDepartments() ([]models.Department, error)
 	GetPrefixByOrgID(orgID int) (string, error)
 	CreateOrganizationWithPrefix(name, prefix string) error
 	DeleteOrganization(orgID int) error
+	DeleteUser(email string) error
 }
 
 type Account interface {
