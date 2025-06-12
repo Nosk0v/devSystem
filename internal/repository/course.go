@@ -336,16 +336,30 @@ func equalIntSlices(a, b []int) bool {
 func (r *CourseRepository) GetCourseProgressByOrganization(orgID int) ([]models.UserCourseProgress, error) {
 	var progress []models.UserCourseProgress
 	query := `
-		SELECT a.email AS user_email,
-		       c.course_id,
-		       c.title AS course_title,
-		       COALESCE(cp.is_completed, false) AS is_completed,
-		       cp.completed_at
+		SELECT 
+			a.email AS user_email,
+			a.name AS user_name,
+			c.course_id,
+			c.title AS course_title,
+			cp.is_completed,
+			cp.completed_at,
+			(SELECT COUNT(*) FROM "CourseMaterial" cm WHERE cm.course_id = c.course_id) AS total_materials,
+			(SELECT COUNT(*) FROM "MaterialProgress" mp 
+			 WHERE mp.course_id = c.course_id AND mp.user_email = a.email) AS viewed_materials,
+			(SELECT MAX(viewed_at) FROM "MaterialProgress" mp 
+			 WHERE mp.course_id = c.course_id AND mp.user_email = a.email) AS last_viewed_at
 		FROM "Account" a
-		JOIN "Course" c ON c.organization_id = a.organization_id
+		CROSS JOIN "Course" c
 		LEFT JOIN "CourseProgress" cp ON cp.course_id = c.course_id AND cp.user_email = a.email
-		WHERE a.organization_id = $1
-		ORDER BY a.email, c.course_id
+		WHERE a.organization_id = $1 AND c.organization_id = $1
+		AND (
+			EXISTS (
+				SELECT 1 FROM "MaterialProgress" mp 
+				WHERE mp.course_id = c.course_id AND mp.user_email = a.email
+			)
+			OR cp.progress_id IS NOT NULL
+		)
+		ORDER BY a.email, c.course_id;
 	`
 	err := r.db.Select(&progress, query, orgID)
 	if err != nil {

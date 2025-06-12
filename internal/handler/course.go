@@ -4,6 +4,7 @@ import (
 	"devSystem/internal/usecase"
 	"devSystem/models"
 	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 	"log"
 	"net/http"
 	"strconv"
@@ -418,40 +419,55 @@ func (h *Handler) getCompletedCourses(c *gin.Context) {
 func (h *Handler) getOrganizationCourseProgress(c *gin.Context) {
 	claims, err := h.GetJWTClaims(c)
 	if err != nil {
+		logrus.WithError(err).Error("❌ Не удалось получить JWT claims")
 		c.JSON(http.StatusUnauthorized, ErrorResponse{Error: "Unauthorized"})
 		return
 	}
+
+	logrus.Infof("📥 Получен запрос на прогресс курсов | Email: %s | Role: %d | OrgID: %v", claims.Email, claims.Role, claims.OrganizationID)
 
 	var orgID int
 
 	switch claims.Role {
 	case usecase.RoleAdmin:
 		if claims.OrganizationID == nil || *claims.OrganizationID <= 0 {
+			logrus.Warn("⛔ Отсутствует organization ID в токене администратора")
 			c.JSON(http.StatusBadRequest, ErrorResponse{Error: "Missing organization ID in token"})
 			return
 		}
 		orgID = *claims.OrganizationID
+		logrus.Infof("✅ Установлен orgID из токена администратора: %d", orgID)
+
 	case usecase.RoleSuperAdmin:
 		rawOrgID := c.Query("org_id")
 		if rawOrgID == "" {
+			logrus.Warn("⛔ org_id query parameter is required for superadmin")
 			c.JSON(http.StatusBadRequest, ErrorResponse{Error: "org_id query parameter is required"})
 			return
 		}
 		orgID, err = strconv.Atoi(rawOrgID)
 		if err != nil || orgID <= 0 {
+			logrus.WithError(err).Warnf("❌ Неверный org_id: %s", rawOrgID)
 			c.JSON(http.StatusBadRequest, ErrorResponse{Error: "Invalid org_id"})
 			return
 		}
+		logrus.Infof("✅ Установлен orgID из query параметра супер-админа: %d", orgID)
+
 	default:
+		logrus.Warnf("🚫 Запрет доступа для роли: %d", claims.Role)
 		c.JSON(http.StatusForbidden, ErrorResponse{Error: "Forbidden"})
 		return
 	}
 
+	logrus.Infof("📡 Запрос на получение прогресса для организации ID=%d", orgID)
+
 	result, err := h.usecases.GetOrganizationCourseProgress(orgID)
 	if err != nil {
+		logrus.WithError(err).Errorf("💥 Ошибка при получении прогресса по организации ID=%d", orgID)
 		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: "Failed to fetch organization course progress"})
 		return
 	}
 
+	logrus.Infof("✅ Успешно получен прогресс для организации ID=%d, Кол-во записей: %d", orgID, len(result))
 	c.JSON(http.StatusOK, result)
 }

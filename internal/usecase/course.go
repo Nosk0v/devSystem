@@ -3,6 +3,7 @@ package usecase
 import (
 	"devSystem/models"
 	"fmt"
+	"github.com/sirupsen/logrus"
 	"log"
 )
 
@@ -87,13 +88,20 @@ func (u *Usecase) GetCoursesByClaims(claims *models.JWTClaims) ([]models.CourseR
 }
 
 func (u *Usecase) GetOrganizationCourseProgress(orgID int) ([]models.UserCourseProgress, error) {
+	logrus.Infof("📊 Получение прогресса по организации | orgID: %d", orgID)
+
 	if orgID <= 0 {
+		logrus.Warnf("⛔ Неверный organization ID: %d", orgID)
 		return nil, fmt.Errorf("invalid organization ID")
 	}
+
 	progress, err := u.services.Course.GetCourseProgressByOrganization(orgID)
 	if err != nil {
+		logrus.WithError(err).Errorf("💥 Ошибка получения прогресса по организации orgID=%d", orgID)
 		return nil, fmt.Errorf("error getting organization course progress: %w", err)
 	}
+
+	logrus.Infof("✅ Прогресс успешно получен | Кол-во записей: %d для orgID=%d", len(progress), orgID)
 	return progress, nil
 }
 func (u *Usecase) UpdateCourse(course models.Course) error {

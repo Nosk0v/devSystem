@@ -1,6 +1,7 @@
 package models
 
 import (
+	"database/sql"
 	"github.com/lib/pq"
 	"time"
 )
@@ -70,9 +71,13 @@ type CourseProgressResponse struct {
 }
 
 type UserCourseProgress struct {
-	UserEmail   string     `json:"user_email"`
-	CourseID    int        `json:"course_id"`
-	CourseTitle string     `json:"course_title"`
-	IsCompleted bool       `json:"is_completed"`
-	CompletedAt *time.Time `json:"completed_at,omitempty"`
+	UserEmail       string       `db:"user_email" json:"user_email"`
+	UserName        string       `db:"user_name" json:"user_name"`
+	CourseID        int          `db:"course_id" json:"course_id"`
+	CourseTitle     string       `db:"course_title" json:"course_title"`
+	IsCompleted     sql.NullBool `db:"is_completed" json:"-"`
+	CompletedAt     *time.Time   `db:"completed_at" json:"completed_at,omitempty"`
+	TotalMaterials  int          `db:"total_materials" json:"total_materials"`
+	ViewedMaterials int          `db:"viewed_materials" json:"viewed_materials"`
+	LastViewedAt    *time.Time   `db:"last_viewed_at" json:"last_viewed_at,omitempty"`
 }
