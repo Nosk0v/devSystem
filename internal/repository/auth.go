@@ -115,8 +115,8 @@ func (r *AuthPostgres) GetRegistrationCodeInfo(code string) (*models.Registratio
 	var info models.RegistrationCode
 	query := `
 		SELECT rc.code, rc.prefix, rc.role, rc.used, rc.expires_at, rc.created_at,
-		       o.organization_id, o.name AS organization_name,
-		       d.department_id, d.name AS department_name
+       o.organization_id AS organization_id, o.name AS organization_name,
+       d.department_id, d.name AS department_name
 		FROM "InviteCode" rc
 		JOIN "RegistrationPrefix" rp ON rc.prefix = rp.prefix
 		JOIN "Organization" o ON rp.organization_id = o.organization_id

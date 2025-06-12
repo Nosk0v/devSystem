@@ -20,9 +20,9 @@ type SignUpInput struct {
 	Email          string  `json:"email" validate:"required,email"`
 	Password       string  `json:"password" validate:"required,min=8,max=32"`
 	Name           *string `json:"name"`
-	Role           int
-	OrganizationID int    `json:"organization"`
-	DepartmentID   *int   `json:"department_id"`
+	Role           int     `json:"-"` // тоже можно отключить от JSON
+	OrganizationID int     `json:"-"`
+	DepartmentID   *int
 	Code           string `json:"code"`
 }
 
@@ -42,8 +42,8 @@ type RegistrationCode struct {
 	CreatedAt        time.Time  `db:"created_at" json:"created_at"`
 	Role             int        `db:"role" json:"role"`
 	OrganizationName string     `db:"organization_name"`
-	DepartmentName   string     `db:"department_name"`
 	UsedAt           *time.Time `db:"used_at" json:"used_at"`
+	DepartmentName   *string    `db:"department_name" json:"department_name,omitempty"`
 }
 
 type SignUpWithCodeInput struct {

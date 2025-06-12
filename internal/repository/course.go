@@ -62,7 +62,7 @@ func (r *CourseRepository) LinkCourseWithCompetencies(courseID int, competencyID
 func (r *CourseRepository) GetCourseByID(id int) (models.CourseResponse, error) {
 	var course models.CourseResponse
 	query := `
-		SELECT c.course_id, c.title, c.description, c.created_by, c.create_date, c.organization_id,
+		SELECT c.course_id, c.title, c.description, c.created_by, c.create_date, c.organization_id, c.department_id,
 		       array_agg(DISTINCT m.title) AS materials,
 		       array_agg(DISTINCT comp.name) AS competencies,
 		       array_agg(DISTINCT m.material_id) AS material_ids
@@ -164,11 +164,11 @@ func (r *CourseRepository) UpdateCourse(course models.Course) error {
 	materialsChanged := !equalIntSlices(existingMaterialIDs, course.Materials)
 
 	query := `
-		UPDATE "Course"
-		SET title = $1, description = $2, created_by = $3, department_id = $4
-		WHERE course_id = $4
-	`
-	_, err = tx.Exec(query, course.Title, course.Description, course.CreatedBy, course.CourseID, course.DepartmentID)
+	UPDATE "Course"
+	SET title = $1, description = $2, created_by = $3, department_id = $4
+	WHERE course_id = $5
+`
+	_, err = tx.Exec(query, course.Title, course.Description, course.CreatedBy, course.DepartmentID, course.CourseID)
 	if err != nil {
 		tx.Rollback()
 		return fmt.Errorf("failed to update course: %w", err)

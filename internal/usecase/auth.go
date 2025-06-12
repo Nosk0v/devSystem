@@ -51,20 +51,21 @@ func (u *Usecase) ParseToken(token string) (*models.JWTClaims, ErrorCode) {
 	return claims, Success
 }
 func (u *Usecase) SignUp(input *models.SignUpInput) ErrorCode {
+
 	// Получить информацию по коду
 	codeInfo, err := u.services.Auth.GetRegistrationCodeInfo(input.Code)
 	if err != nil {
-		logrus.Error("не удалось получить информацию по коду: ", err)
+		logrus.WithError(err).Error("не удалось получить информацию по коду")
 		return CodeNotFound
 	}
 
 	if codeInfo.IsUsed {
-		logrus.Warn("код уже использован")
+		logrus.Warn("Код уже использован")
 		return CodeAlreadyUsed
 	}
 
 	if codeInfo.ExpiresAt != nil && codeInfo.ExpiresAt.Before(time.Now()) {
-		logrus.Warn("срок действия кода истёк")
+		logrus.Warn("Срок действия кода истёк")
 		return ResourceExpired
 	}
 
@@ -79,24 +80,24 @@ func (u *Usecase) SignUp(input *models.SignUpInput) ErrorCode {
 	} else {
 		input.Role = 1 // обычный
 	}
+
 	input.OrganizationID = codeInfo.OrganizationID
 	input.DepartmentID = codeInfo.DepartmentID
 
 	// Регистрируем
 	err = u.services.Auth.SignUp(input)
 	if err != nil {
+		logrus.WithError(err).Error("Ошибка при создании аккаунта")
 		if strings.Contains(err.Error(), "уже зарегистрирован") {
 			return ResourceAlreadyExist
 		}
-		logrus.Error("Ошибка при создании аккаунта: ", err)
 		return InternalServerError
 	}
 
 	// Помечаем код как использованный
 	err = u.services.Auth.MarkRegistrationCodeAsUsed(input.Code)
 	if err != nil {
-		logrus.Warn("Не удалось пометить код как использованный: ", err)
-		// Не критично, регистрацию не прерываем
+		logrus.WithError(err).Warn("Не удалось пометить код как использованный")
 	}
 
 	return ResourceCreated
@@ -125,10 +126,6 @@ func (u *Usecase) GetDepartments() ([]models.Department, error) {
 
 func (u *Usecase) DeleteRegistrationCode(code string) error {
 	return u.services.Auth.DeleteRegistrationCode(code)
-}
-
-func (u *Usecase) GetRegistrationCodeInfo(code string) (*models.RegistrationCode, error) {
-	return u.services.Auth.GetRegistrationCodeInfo(code)
 }
 
 func (u *Usecase) CreateRegistrationCode(orgID int, isAdmin bool, departmentID *int) (string, error) {

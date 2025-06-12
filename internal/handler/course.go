@@ -102,7 +102,21 @@ func (h *Handler) createCourse(c *gin.Context) {
 		return
 	}
 
-	input.OrganizationID = *claims.OrganizationID
+	if claims.Role == usecase.RoleSuperAdmin {
+		if input.OrganizationID == 0 {
+			log.Println("Missing organization ID in request from SuperAdmin")
+			c.JSON(http.StatusBadRequest, ErrorResponse{Error: "Organization ID is required for SuperAdmin"})
+			return
+		}
+	} else {
+		if claims.OrganizationID == nil {
+			log.Println("Missing organization ID in token")
+			c.JSON(http.StatusBadRequest, ErrorResponse{Error: "Missing organization ID"})
+			return
+		}
+		input.OrganizationID = *claims.OrganizationID
+	}
+
 	input.CreatedBy = claims.Email
 	if input.CreateDate.IsZero() {
 		input.CreateDate = time.Now().UTC()
@@ -150,12 +164,6 @@ func (h *Handler) updateCourse(c *gin.Context) {
 	}
 	input.CourseID = id
 
-	claims, err := h.GetJWTClaims(c)
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, ErrorResponse{Error: "Unauthorized"})
-		return
-	}
-
 	existingCourse, err := h.usecases.GetCourse(id)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: "Failed to fetch existing course"})
@@ -164,13 +172,6 @@ func (h *Handler) updateCourse(c *gin.Context) {
 	if existingCourse == nil {
 		c.JSON(http.StatusNotFound, ErrorResponse{Error: "Course not found"})
 		return
-	}
-
-	if claims.Role != usecase.RoleSuperAdmin {
-		if claims.OrganizationID == nil || *claims.OrganizationID != existingCourse.OrganizationID {
-			c.JSON(http.StatusForbidden, ErrorResponse{Error: "Access denied"})
-			return
-		}
 	}
 
 	input.OrganizationID = existingCourse.OrganizationID
