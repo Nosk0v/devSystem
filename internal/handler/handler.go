@@ -90,14 +90,13 @@ func (h *Handler) InitRoutes() *gin.Engine {
 			course.GET("/completed", h.isCourseCompleted)
 			course.POST("/materials/:material_id/complete", h.markMaterialAsCompleted)
 		}
-		users := api.Group("/users", h.UserIdentityMiddleware)
-		{
-			users.GET("/organization", h.getOrganizationUsers)
-		}
 
-		auth.DELETE("/users/:email", h.deleteUser)
 	}
-
+	users := api.Group("/users", h.UserIdentityMiddleware)
+	{
+		users.GET("/organization", h.getOrganizationUsers)
+		users.DELETE("/:email", h.deleteUser)
+	}
 	return router
 }
 

@@ -118,7 +118,12 @@ func (h *Handler) createCourse(c *gin.Context) {
 		input.OrganizationID = *claims.OrganizationID
 	}
 
-	input.CreatedBy = claims.Email
+	if claims.Email != "" {
+		input.CreatedBy = &claims.Email
+	} else {
+		input.CreatedBy = nil
+	}
+
 	if input.CreateDate.IsZero() {
 		input.CreateDate = time.Now().UTC()
 	}

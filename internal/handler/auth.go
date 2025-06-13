@@ -5,6 +5,7 @@ import (
 	"devSystem/models"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
+	"log"
 	"net/http"
 	"strconv"
 )
@@ -266,38 +267,52 @@ func (h *Handler) deleteRegistrationCode(c *gin.Context) {
 // @Failure 500 {object} ErrorResponse
 // @Router /users/organization [get]
 func (h *Handler) getOrganizationUsers(c *gin.Context) {
+	log.Println("Handling getOrganizationUsers...")
+
 	claims, err := h.GetJWTClaims(c)
 	if err != nil {
+		log.Printf("Failed to get JWT claims: %v\n", err)
 		c.JSON(http.StatusUnauthorized, ErrorResponse{Error: "Unauthorized"})
 		return
 	}
+	log.Printf("Extracted claims: %+v\n", claims)
 
 	var orgID int
 	if claims.Role == usecase.RoleSuperAdmin {
 		orgIDStr := c.Query("organization_id")
+		log.Printf("SuperAdmin request with organization_id: %s\n", orgIDStr)
+
 		if orgIDStr == "" {
+			log.Println("Missing organization_id in query params")
 			c.JSON(http.StatusBadRequest, ErrorResponse{Error: "organization_id is required for SuperAdmin"})
 			return
 		}
+
 		orgID, err = strconv.Atoi(orgIDStr)
 		if err != nil || orgID <= 0 {
+			log.Printf("Invalid organization_id format: %s, err: %v\n", orgIDStr, err)
 			c.JSON(http.StatusBadRequest, ErrorResponse{Error: "Invalid organization_id"})
 			return
 		}
 	} else {
 		if claims.OrganizationID == nil {
+			log.Println("Organization ID missing from token for non-superadmin")
 			c.JSON(http.StatusForbidden, ErrorResponse{Error: "Organization ID missing from token"})
 			return
 		}
 		orgID = *claims.OrganizationID
+		log.Printf("Non-superadmin, using orgID from token: %d\n", orgID)
 	}
 
+	log.Printf("Fetching users for orgID: %d\n", orgID)
 	users, err := h.usecases.GetUsersByOrganization(orgID)
 	if err != nil {
+		log.Printf("Failed to get users from usecase for orgID=%d: %v\n", orgID, err)
 		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: "Failed to fetch users"})
 		return
 	}
 
+	log.Printf("Successfully fetched %d users for orgID=%d\n", len(users), orgID)
 	c.JSON(http.StatusOK, users)
 }
 

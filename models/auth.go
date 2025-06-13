@@ -68,8 +68,8 @@ type RegistrationCodeOutput struct {
 }
 
 type UserResponse struct {
-	Email        string `json:"email"`
-	Name         string `json:"name"`
-	DepartmentID int    `json:"department_id"`
-	Role         int    `json:"role"`
+	Email        string  `db:"email" json:"email"`
+	Name         *string `db:"name" json:"name"`
+	DepartmentID *int    `db:"department_id" json:"department_id"`
+	Role         int     `db:"role" json:"role"`
 }
