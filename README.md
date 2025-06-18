@@ -8,7 +8,6 @@
 - [Требования](#требования)
 - [Запуск](#запуск)
   - [Локальный запуск](#локальный-запуск)
-  - [Запуск с Docker](#запуск-с-docker)
 - [API Документация](#api-документация)
 - [Разработчики](#разработчики)
 
@@ -29,7 +28,7 @@
 
 ## 🚀 Запуск
 
-### Локальный запуск
+### Локальный запуск сервера
 
 1. **Клонирование репозитория:**
    ```bash
@@ -41,7 +40,7 @@
    
    ```sql
    
-   CREATE DATABASE development_system;
+   CREATE DATABASE "development-system-db";
    
   Скрипт для создания таблиц находится в db/migrations
 
@@ -50,36 +49,28 @@
     В файле config/config.json укажите параметры подключения к базе данных: (ниже пример)
     ```json
     {
-    "host": "localhost",
-    "port": "5432",
-    "username": "postgres",
-    "password": "1234",
-    "dbname": "development_system",
-    "sslmode": "disable"
-    }
+      "server": {
+      "server_port": "25502",
+      "jwt_secret_key": "secret"
+      },
+      "development-system-database": {
+      "db_host": "postgres",
+      "db_port": "5432",
+      "db_username": "postgres",
+      "db_password": "1234",
+      "db_name": "development-system-db",
+      "db_ssl_mode": "disable"
+      }
+   }
 
-4. **Запуск сервера:**
+4. **Запуск сервера локально:**
    ```bash
    cd cmd
    SKIP_MIGRATIONS=true go run main.go
    
 5. **Проверка работы:**
    
-    После запуска приложение доступно на http://localhost:8080.
-
-### Запуск с Docker
-
-1. **Клонирование репозитория:**
-   ```bash
-   git clone https://github.com/Nosk0v/devSystem.git
-   cd devSystem
-2. **Сборка и запуск контейнеров:**
-   
-   ```bash
-   docker-compose up --build
-3. **Проверка работы:**
-   
-    После запуска приложение доступно на http://localhost:8080.
+    После запуска сервер доступен на http://localhost:25502.
    
 ### 📖 API Документация
 API документация сгенерирована с использованием Swagger. Доступна в папке cmd/docs

@@ -15,7 +15,7 @@ type Course struct {
 	Competencies   []int     `json:"competencies" example:"[1, 5]"`
 	CreateDate     time.Time `json:"create_date" example:"2024-11-28T15:04:05Z"`
 	OrganizationID int       `json:"organization_id"`
-	DepartmentID   int       `json:"department_id"` // 👈 добавлено
+	DepartmentID   int       `json:"department_id"`
 }
 
 type CreateCourseRequest struct {
@@ -25,7 +25,7 @@ type CreateCourseRequest struct {
 	Materials      []int  `json:"materials" example:"[1,2]"`
 	Competencies   []int  `json:"competencies" example:"[3,5]"`
 	OrganizationID int    `json:"organization_id"`
-	DepartmentID   int    `json:"department_id"` // 👈 добавлено
+	DepartmentID   int    `json:"department_id"`
 }
 
 type CourseResponse struct {
@@ -38,7 +38,7 @@ type CourseResponse struct {
 	Competencies   pq.StringArray `db:"competencies" json:"competencies" swaggertype:"array,string" example:"[\"Go Basics\", \"Concurrency\"]"`
 	CreateDate     time.Time      `db:"create_date" json:"create_date" example:"2024-11-28T15:04:05Z"`
 	OrganizationID int            `db:"organization_id" json:"organization_id"`
-	DepartmentID   int            `db:"department_id" json:"department_id"` // 👈 добавлено
+	DepartmentID   int            `db:"department_id" json:"department_id"`
 }
 
 type CourseMaterial struct {

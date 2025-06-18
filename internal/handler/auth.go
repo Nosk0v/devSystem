@@ -44,7 +44,7 @@ func (h *Handler) signIn(c *gin.Context) {
 // @Description Удаляет организацию и все связанные с ней записи
 // @Tags auth
 // @Param id path int true "ID организации"
-// @Success 200 {object} gin.H
+// @Success 200
 // @Failure 400 {object} ErrorResponse
 // @Failure 404 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse
@@ -181,7 +181,7 @@ func (h *Handler) getDepartments(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param input body models.CreateOrganizationInput true "Данные организации"
-// @Success 201 {object} models.CreateOrganizationOutput
+// @Success 201
 // @Failure 400 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse
 // @Router /auth/organization [post]
