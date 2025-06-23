@@ -28,7 +28,7 @@ func (r *CourseRepository) CreateCourse(course models.Course) (int, error) {
 		course.CreatedBy,
 		course.CreateDate,
 		course.OrganizationID,
-		course.DepartmentID, // 👈 добавлено
+		course.DepartmentID,
 	).Scan(&courseID)
 	if err != nil {
 		return 0, fmt.Errorf("error creating course: %w", err)

@@ -1,5 +1,5 @@
 // @title devSystem API Документация
-// @version 1.0
+// @version 1.2
 // @description Это API сервер для сервиса «Развитие сотрудников» с целью автоматизации процессов управления персоналом.
 // @termsOfService http://swagger.io/terms/
 
